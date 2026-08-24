@@ -1,0 +1,6 @@
+name: ihomepages
+version: '${project.version}'
+main: soys.ihomepages.MyHomePages
+author: SOYS
+description: 自定义主页插件：记录不同位置的页面并写入 SOYSHTTPOverMC 的 pages.yml web.home，由框架伺服。软依赖宿主插件的 API 门面注册子指令/接口/reload 钩子。
+depend: [SOYSHTTPOverMC]

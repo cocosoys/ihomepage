@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 独立兄弟模块：自定义主页插件（ihomepages）。
+         软依赖 SOYSHTTPOverMC：运行时由宿主插件提供 API 类；编译期依赖宿主 artifact（须先 mvn install 宿主）。 -->
+    <groupId>soys.ihomepages</groupId>
+    <artifactId>ihomepages</artifactId>
+    <version>${revision}</version>
+    <packaging>jar</packaging>
+
+    <name>ihomepages</name>
+
+    <properties>
+        <java.version>1.8</java.version>
+        <!-- 与主插件发布版本同步：打 tag 后用 -Drevision=<tag> 覆盖 -->
+        <revision>1.0.0</revision>
+        <!-- 宿主插件版本（依赖它拿到 host 插件 jar 中的 API 类） -->
+        <soyshttpovermc.version>1.0.0</soyshttpovermc.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <build>
+        <finalName>ihomepages</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin>
+            <!-- 资源过滤：仅文本（plugin.yml 占位符替换）；二进制资源（dist 下的 png/jpg/字体等）须排除，
+                 否则 maven-resources-plugin 以文本编码读取会抛 MalformedInputException -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <nonFilteredFileExtensions>
+                        <nonFilteredFileExtension>jpg</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>jpeg</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>gif</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>bmp</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>png</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>eot</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>ttf</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>woff</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>woff2</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>otf</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>ico</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>svg</nonFilteredFileExtension>
+                    </nonFilteredFileExtensions>
+                </configuration>
+            </plugin>
+        </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>spigot-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+        </repository>
+        <!-- 宿主导宿主插件依赖（如 jitpack）解析，确保本模块最终能解析宿主 artifact 的传递依赖 -->
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+        <repository>
+            <id>central-direct</id>
+            <name>Maven Central (direct)</name>
+            <url>https://repo1.maven.org/maven2/</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <!-- Spigot API：provided，运行时由服务端提供 -->
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <version>1.12.2-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- 宿主插件（API 门面 / 注解 / LogKit / MimeTypes 等）。provided：运行时由 SOYSHTTPOverMC 提供，不打进本 jar。
+             构建本模块前须先执行 mvn -o install 安装宿主插件 artifact 到本地仓库。 -->
+        <dependency>
+            <groupId>soys.soyshttpovermc</groupId>
+            <artifactId>SOYSHTTPOverMC</artifactId>
+            <version>${soyshttpovermc.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- Lombok：编译期注解处理（@CustomLog 等），provided -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.36</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>
