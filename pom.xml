@@ -17,8 +17,6 @@
         <java.version>1.8</java.version>
         <!-- 与主插件发布版本同步：打 tag 后用 -Drevision=<tag> 覆盖 -->
         <revision>1.0.0</revision>
-        <!-- 宿主插件版本（依赖它拿到 host 插件 jar 中的 API 类） -->
-        <soyshttpovermc.version>1.0.0</soyshttpovermc.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -94,9 +92,9 @@
         <!-- 宿主插件（API 门面 / 注解 / LogKit / MimeTypes 等）。provided：运行时由 SOYSHTTPOverMC 提供，不打进本 jar。
              构建本模块前须先执行 mvn -o install 安装宿主插件 artifact 到本地仓库。 -->
         <dependency>
-            <groupId>soys.soyshttpovermc</groupId>
-            <artifactId>SOYSHTTPOverMC</artifactId>
-            <version>${soyshttpovermc.version}</version>
+            <groupId>com.github.cocosoys.mc</groupId>
+            <artifactId>soyshttpovermc</artifactId>
+            <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
         <!-- Lombok：编译期注解处理（@CustomLog 等），provided -->
