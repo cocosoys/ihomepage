@@ -1,5 +1,5 @@
 package com.github.cocosoys.mc.ihomepages.config;
-import com.github.cocosoys.mc.soyshttpovermc.HttpResponse;
+import com.github.cocosoys.mc.soyshttpovermc.web.HttpResponse;
 import lombok.CustomLog;
 
 import com.github.cocosoys.mc.soyshttpovermc.api.HttpClientApi;

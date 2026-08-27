@@ -48,11 +48,11 @@ public class HomeApiImpl implements HomeApi {
             state.saveCurrent(name);
             // 2) 同步 soyshttpovermc pages.yml 的 web.home（页面位置：相对路径按数据目录解析为绝对路径；URL/绝对路径原样）
             String value = com.github.cocosoys.mc.ihomepages.MyHomePages.resolveWebHomeSpec(plugin, spec);
-            plugin.setWebHome(value);
+            plugin.getDelegate().setWebHome(value);
             // 3) reload 使 web.home 生效（reloadHttpConfig 末尾会把 web.home 应用到运行中的 WebFrontendHandler，
             //    并触发已注册的 ReloadHttpConfigHandler / HttpConfigReloadEvent 让其它模块一起刷新）。
             //    注意：reload 内部会再次调用本模块注册的钩子，但钩子只做 setHomeSpec 不递归 reload。
-            plugin.reloadHttpConfig();
+            plugin.getDelegate().reloadHttpConfig();
             registry.setCurrentName(name);
             return true;
         } finally {

@@ -116,7 +116,7 @@ public class HomepageSubCommand extends SubCommand {
             }
             case "reload": {
                 // 按 homepage.current 重新应用 web.home（不切换）；等价于 /soyshttp reload 中对本模块的钩子动作
-                plugin.reloadHttpConfig();
+                plugin.getDelegate().reloadHttpConfig();
                 msgT(sender, "command.homepage.reloaded", "§a已按当前主页重新应用 web.home。");
                 break;
             }

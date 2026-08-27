@@ -1,9 +1,9 @@
 package com.github.cocosoys.mc.ihomepages;
 
+import lombok.CustomLog;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import com.github.cocosoys.mc.soyshttpovermc.HttpOverMcPlugin;
-import com.github.cocosoys.mc.soyshttpovermc.log.LogKit;
 import com.github.cocosoys.mc.soyshttpovermc.api.SoysHttpOverMcApi;
 import com.github.cocosoys.mc.ihomepages.api.HomeApi;
 import com.github.cocosoys.mc.ihomepages.api.impl.HomeApiImpl;
@@ -109,8 +109,8 @@ public final class MyHomePages extends JavaPlugin {
         String curSpec = registry.getSpec(current);
         if (curSpec != null) {
             String value = resolveWebHomeSpec(host, curSpec);
-            host.setWebHome(value);
-            host.getFrontendHandler().setHomeSpec(value);
+            host.getDelegate().setWebHome(value);
+            host.getWebFrontend().setHomeSpec(value);
             log.infoT("mhp.apply-home", "已应用当前主页到 web.home: {0} -> {1}", current, value);
         }
 
@@ -123,7 +123,7 @@ public final class MyHomePages extends JavaPlugin {
             if (cur != null && !cur.isEmpty()) {
                 String s = registry.getSpec(cur);
                 if (s != null) {
-                    HttpOverMcPlugin.getInstance().getFrontendHandler()
+                    HttpOverMcPlugin.getInstance().getWebFrontend()
                             .setHomeSpec(resolveWebHomeSpec(HttpOverMcPlugin.getInstance(), s));
                 }
             }
