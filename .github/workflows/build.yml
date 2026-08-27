@@ -1,0 +1,105 @@
+name: Build & Auto Release (ihomepages)
+
+on:
+  push:
+    tags:
+      - 'ihomepages-v*'   # 仅本模块打 tag 时触发发布（如 ihomepages-v1.0.0）
+  workflow_dispatch:       # 手动触发：仅构建并上传 artifacts（不创建 Release）
+
+# ⚠️ 必改项：宿主仓库地址。ihomepages 编译期依赖宿主插件 artifact
+#    com.github.cocosoys.mc:soyshttpovermc（由本工作流先 `mvn install` 进本地仓库）。
+#    默认按 groupId 推断为 cocosoys/SOYSHTTPOverMC；若你的仓库 slug 不同，请改下方 env.HOST_REPO。
+env:
+  HOST_REPO: cocosoys/SOYSHTTPOverMC
+  HOST_REVISION: "1.2.0"   # 须与 ihomepages/pom.xml 中宿主依赖版本一致（当前硬编码 1.2.0）
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout ihomepages (self)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          path: ihomepages
+
+      - name: Checkout host plugin (SOYSHTTPOverMC)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.HOST_REPO }}
+          fetch-depth: 0
+          path: SOYSHTTPOverMC
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v5
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: maven
+
+      # ---- 构建宿主插件并 install 到本地仓库（供 ihomepages 编译依赖）----
+      - name: Install host vendored deps
+        working-directory: SOYSHTTPOverMC
+        run: |
+          mvn -B -q install:install-file -Dfile=lib/packetlib-1.2.jar \
+            -DgroupId=com.github.steveice10 -DartifactId=packetlib -Dversion=1.2 -Dpackaging=jar
+          mvn -B -q install:install-file -Dfile=lib/opennbt-1.0.jar \
+            -DgroupId=com.github.steveice10 -DartifactId=opennbt -Dversion=1.0 -Dpackaging=jar
+          mvn -B -q install:install-file -Dfile=lib/bungeecord-api-1.12.2-build1867-slim.jar \
+            -DgroupId=net.md_5 -DartifactId=bungeecord-api -Dversion=1.12.2-build1867 -Dpackaging=jar
+          mvn -B -q install:install-file -Dfile=lib/MCProtocolLib-1.12.2-2.jar \
+            -DgroupId=com.github.steveice10 -DartifactId=MCProtocolLib -Dversion=1.12.2-2 -Dpackaging=jar
+
+      - name: Build & install host plugin
+        working-directory: SOYSHTTPOverMC
+        run: mvn -B -q clean install -DskipTests -Drevision=${{ env.HOST_REVISION }}
+
+      # ---- 构建 ihomepages 自身 ----
+      - name: Build ihomepages
+        working-directory: ihomepages
+        run: |
+          MAVEN_ARGS="-B clean package -DskipTests"
+          if [[ "${{ github.ref }}" == refs/tags/ihomepages-v* ]]; then
+            TAG="${GITHUB_REF#refs/tags/ihomepages-v}"
+            MAVEN_ARGS+=" -Drevision=$TAG"
+          fi
+          echo "Maven arguments: $MAVEN_ARGS"
+          mvn $MAVEN_ARGS
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ihomepages-jar
+          path: |
+            ihomepages/target/ihomepages.jar
+          if-no-files-found: error
+
+      - name: Get tag-commit short message
+        id: get_commit
+        if: startsWith(github.ref, 'refs/tags/ihomepages-v')
+        run: |
+          COMMIT_MSG=$(git -C ihomepages log -1 --pretty=%s "${GITHUB_REF}")
+          echo "COMMIT_MSG<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMIT_MSG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Create GitHub Release & upload jar
+        if: startsWith(github.ref, 'refs/tags/ihomepages-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ihomepages ${{ github.ref_name }}
+          generate_release_notes: true
+          body: |
+            ## ✨ ihomepages 更新说明
+            ${{ steps.get_commit.outputs.COMMIT_MSG }}
+
+            ### 📦 下载
+            - `ihomepage*.jar` —— 自定义主页插件（放服务端 plugins/，需先安装 SOYSHTTPOverMC 宿主）
+          files: |
+            ihomepages/target/ihomepage*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

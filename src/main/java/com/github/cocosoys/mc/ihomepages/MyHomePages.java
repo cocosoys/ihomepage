@@ -1,10 +1,9 @@
 package com.github.cocosoys.mc.ihomepages;
 
-import lombok.CustomLog;
-
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import com.github.cocosoys.mc.soyshttpovermc.HttpOverMcPlugin;
+import com.github.cocosoys.mc.soyshttpovermc.log.LogKit;
 import com.github.cocosoys.mc.soyshttpovermc.api.SoysHttpOverMcApi;
 import com.github.cocosoys.mc.ihomepages.api.HomeApi;
 import com.github.cocosoys.mc.ihomepages.api.impl.HomeApiImpl;
@@ -58,7 +57,7 @@ public final class MyHomePages extends JavaPlugin {
         // 宿主必须在运行时已加载（softdepend 通常保证先加载；此处在多个启动路径下兜底校验）
         HttpOverMcPlugin host = HttpOverMcPlugin.getInstance();
         if (host == null || Bukkit.getPluginManager().getPlugin("SOYSHTTPOverMC") == null) {
-            log.warnT("mhp.host-missing", "[ihomepages] 未找到 SOYSHTTPOverMC 宿主插件，跳过自定义主页注册");
+            log.warnT("mhp.host-missing", "未找到 SOYSHTTPOverMC 宿主插件，跳过自定义主页注册");
             return;
         }
         SoysHttpOverMcApi api = host.getApi();
@@ -69,7 +68,7 @@ public final class MyHomePages extends JavaPlugin {
         if (!cfgReader.isEnabled()) {
             homeApi = null;
             log.infoT("mhp.disabled",
-                    "[ihomepages] 已在 config.yml 中禁用（enabled: false），跳过注册。");
+                    "已在 config.yml 中禁用（enabled: false），跳过注册。");
             return;
         }
 
@@ -102,9 +101,9 @@ public final class MyHomePages extends JavaPlugin {
         homeApi = apiFacade;
 
         // 3.0) 释放 dist / language 目录到本插件数据目录（供管理/自定义），并优先伺服磁盘副本
-        File hpDir = new File(getDataFolder(), "ihomepages");
-        extractResourceDir(this, "dist", new File(hpDir, "dist"));
-        extractResourceDir(this, "language", new File(hpDir, "language"));
+        // 注意：getDataFolder() 本身即插件数据目录（plugins/ihomepages），切勿再拼 "ihomepages"，否则会多套一层。
+        extractResourceDir(this, "dist", new File(getDataFolder(), "dist"));
+        extractResourceDir(this, "language", new File(getDataFolder(), "language"));
 
         // 3.1) 启动即把当前主页位置写入宿主 pages.yml 的 web.home 并应用（不触发全量 reload，仅应用运行中的 WebFrontendHandler）
         String curSpec = registry.getSpec(current);
@@ -112,7 +111,7 @@ public final class MyHomePages extends JavaPlugin {
             String value = resolveWebHomeSpec(host, curSpec);
             host.setWebHome(value);
             host.getFrontendHandler().setHomeSpec(value);
-            log.infoT("mhp.apply-home", "[ihomepages] 已应用当前主页到 web.home: {0} -> {1}", current, value);
+            log.infoT("mhp.apply-home", "已应用当前主页到 web.home: {0} -> {1}", current, value);
         }
 
         // 3.2) 注册 /soyshttp homepage 子指令（宿主 initCommand 之后再注入，命令方可生效）
@@ -139,7 +138,7 @@ public final class MyHomePages extends JavaPlugin {
         api.getApiRegistration().registerController(controller, this);
 
         log.infoT("mhp.registered",
-                "[ihomepages] 已注册自定义主页：主页位置 {0} 个（current={1}），API: /api/homepage/{{config,live,gift/claim,gift/status}",
+                "已注册自定义主页：主页位置 {0} 个（current={1}），API: /api/homepage/{config,live,gift/claim,gift/status}",
                 specs.size(), current);
     }
 
@@ -196,7 +195,7 @@ public final class MyHomePages extends JavaPlugin {
         }
         if (jar == null || !jar.isFile()) {
             log.warnT("log.homepage.extract-jar-missing",
-                    "[ihomepages] 无法定位插件 jar，跳过 {0} 目录释放", resDir);
+                    "无法定位插件 jar，跳过 {0} 目录释放", resDir);
             return;
         }
         String prefix = resDir.endsWith("/") ? resDir : resDir + "/";
@@ -222,10 +221,10 @@ public final class MyHomePages extends JavaPlugin {
                 }
             }
             log.infoT("log.homepage.extracted",
-                    "[ihomepages] 已释放目录 {0} → {1}", resDir, outDir.getAbsolutePath());
+                    "已释放目录 {0} → {1}", resDir, outDir.getAbsolutePath());
         } catch (IOException ex) {
             log.warnT("log.homepage.extract-fail",
-                    "[ihomepages] 释放目录 {0} 失败: {1}", resDir, ex.getMessage());
+                    "释放目录 {0} 失败: {1}", resDir, ex.getMessage());
         }
     }
 

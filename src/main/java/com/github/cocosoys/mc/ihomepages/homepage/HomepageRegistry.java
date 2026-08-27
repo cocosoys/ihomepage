@@ -28,7 +28,7 @@ public class HomepageRegistry {
             return;
         }
         specs.put(name, spec.trim());
-        log.infoT("log.homepage.register", "[ihomepages] 记录主页位置: {0} -> {1}", name, spec.trim());
+        log.infoT("log.homepage.register", "记录主页位置: {0} -> {1}", name, spec.trim());
     }
 
     /** 读取指定主页的位置描述（可能为 null）。 */
