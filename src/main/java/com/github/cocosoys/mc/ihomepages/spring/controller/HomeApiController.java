@@ -4,7 +4,7 @@ import com.github.cocosoys.mc.soyshttpovermc.annotations.GetMapping;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.github.cocosoys.mc.soyshttpovermc.api.ApiRequestContext;
+import com.github.cocosoys.mc.soyshttpovermc.web.ApiRequestContext;
 import com.github.cocosoys.mc.soyshttpovermc.util.AjaxResult;
 import com.github.cocosoys.mc.ihomepages.config.HomeConfigEntity;
 import com.github.cocosoys.mc.ihomepages.spring.service.IGiftService;
