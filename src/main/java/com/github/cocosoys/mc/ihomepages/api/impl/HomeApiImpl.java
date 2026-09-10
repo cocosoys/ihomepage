@@ -1,5 +1,6 @@
 package com.github.cocosoys.mc.ihomepages.api.impl;
 
+import com.github.cocosoys.mc.ihomepages.MyHomePages;
 import com.github.cocosoys.mc.ihomepages.api.HomeApi;
 import com.github.cocosoys.mc.ihomepages.homepage.HomepageRegistry;
 import com.github.cocosoys.mc.ihomepages.homepage.HomepageState;
@@ -46,8 +47,8 @@ public class HomeApiImpl implements HomeApi {
             }
             // 1) 记录当前主页到 ihomepage 自身 config.yml 的 homepage.current
             state.saveCurrent(name);
-            // 2) 同步 soyshttpovermc pages.yml 的 web.home（页面位置：相对路径按数据目录解析为绝对路径；URL/绝对路径原样）
-            String value = com.github.cocosoys.mc.ihomepages.MyHomePages.resolveWebHomeSpec(plugin, spec);
+            // 2) 同步 soyshttpovermc pages.yml 的 web.home（页面位置：相对路径按本插件数据目录解析为绝对路径；URL/绝对路径原样）
+            String value = MyHomePages.resolveWebHomeSpec(spec);
             plugin.getDelegate().setWebHome(value);
             // 3) reload 使 web.home 生效（reloadHttpConfig 末尾会把 web.home 应用到运行中的 WebFrontendHandler，
             //    并触发已注册的 ReloadHttpConfigHandler / HttpConfigReloadEvent 让其它模块一起刷新）。

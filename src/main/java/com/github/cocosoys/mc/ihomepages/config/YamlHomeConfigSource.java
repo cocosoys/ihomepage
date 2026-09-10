@@ -5,6 +5,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * 内容配置源实现：读取 {@code home.yml} → {@link HomeConfigEntity}。
+ *
+ * <p>礼包内容已迁移至 actions.yml（由 action 层承载），本类不再处理 gift 段持久化。</p>
  */
 public class YamlHomeConfigSource extends AbstractConfigSource implements IHomeConfigSource {
 

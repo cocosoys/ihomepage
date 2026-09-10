@@ -11,7 +11,7 @@ on:
 #    默认按 groupId 推断为 cocosoys/SOYSHTTPOverMC；若你的仓库 slug 不同，请改下方 env.HOST_REPO。
 env:
   HOST_REPO: cocosoys/SOYSHTTPOverMC
-  HOST_REVISION: "1.2.0"   # 须与 ihomepages/pom.xml 中宿主依赖版本一致（当前硬编码 1.2.0）
+  HOST_REVISION: "1.3.0"   # 须与 ihomepages/pom.xml 中宿主依赖版本一致（当前硬编码 1.3.0）
 
 jobs:
   build:
@@ -40,21 +40,11 @@ jobs:
           cache: maven
 
       # ---- 构建宿主插件并 install 到本地仓库（供 ihomepages 编译依赖）----
-      - name: Install host vendored deps
-        working-directory: SOYSHTTPOverMC
-        run: |
-          mvn -B -q install:install-file -Dfile=lib/packetlib-1.2.jar \
-            -DgroupId=com.github.steveice10 -DartifactId=packetlib -Dversion=1.2 -Dpackaging=jar
-          mvn -B -q install:install-file -Dfile=lib/opennbt-1.0.jar \
-            -DgroupId=com.github.steveice10 -DartifactId=opennbt -Dversion=1.0 -Dpackaging=jar
-          mvn -B -q install:install-file -Dfile=lib/bungeecord-api-1.12.2-build1867-slim.jar \
-            -DgroupId=net.md_5 -DartifactId=bungeecord-api -Dversion=1.12.2-build1867 -Dpackaging=jar
-          mvn -B -q install:install-file -Dfile=lib/MCProtocolLib-1.12.2-2.jar \
-            -DgroupId=com.github.steveice10 -DartifactId=MCProtocolLib -Dversion=1.12.2-2 -Dpackaging=jar
-
+      # 1.3.0 起宿主已删除 vendored lib/（packetlib/opennbt/MCProtocolLib 等），
+      # 且拆分多模块；仅需构建 common+core（ihomepages 编译依赖），adapter 低版本兼容模块无需构建。
       - name: Build & install host plugin
         working-directory: SOYSHTTPOverMC
-        run: mvn -B -q clean install -DskipTests -Drevision=${{ env.HOST_REVISION }}
+        run: mvn -B -q -pl common,core -am clean install -DskipTests -Drevision=${{ env.HOST_REVISION }}
 
       # ---- 构建 ihomepages 自身 ----
       - name: Build ihomepages

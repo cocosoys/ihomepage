@@ -4,7 +4,6 @@ import lombok.Data;
 
 /**
  * 通用展示字段实体。
- * 所有需要在前端展示的实体（GiftItem / GiftCommand 等）继承此类，
  * 提供统一的前端展示控制字段，YAML 中可写可不写，均有默认值。
  */
 @Data

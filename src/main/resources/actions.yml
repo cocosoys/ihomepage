@@ -1,0 +1,112 @@
+# ===================== 网页动作配置 actions.yml =====================
+# 【服主使用】在此定义「网页端按钮 → 服务端动作」：保存后执行
+#   /soyshttp homepage actions reload
+# 即可生效，无需重启服务器。玩家在网页端点击按钮 → 按本文件 effects 列表顺序执行。
+#
+# 【字段说明】
+#   strict            可选，默认 false。true 时若配置存在任何错误，全部动作拒绝加载（沿用旧配置），防止误操作导致动作全失效。
+#   actions.<id>      动作唯一标识（小写字母/数字/下划线/连字符，1-32 位）。前端按钮和代码调用都用它。
+#     name              动作显示名（前端按钮/卡片标题）                [必填]
+#     price             价格（服务端扣款额，走 eco take 命令；0/留空 = 免费）
+#     offline           离线策略：
+#                       run    = 离线也立即执行（仅限账号类/控制台类命令，如权限、经济）
+#                       queue  = 离线时先扣钱、实体类命令入队、玩家上线后自动补执行（默认）
+#                       reject = 离线直接拒绝（如必须在线才能完成的动作，如出售背包物品）
+#     cooldown-seconds  冷却秒数（同一玩家两次执行的最小间隔；0 = 不限）
+#     balance-check     扣款前是否预检余额（需要 Vault；未装 Vault 则自动跳过预检）
+#     claim-period      领取周期去重：once / daily / weekly（可选，空 = 不限，每次点击均可执行）
+#                       配置后每次执行前查领取记录（落 homepage_action_claim），周期内已领则拒绝并提示
+#     claim-window-start / claim-window-end
+#                       领取时间窗口（可选，格式 yyyy-MM-dd HH:mm:ss，空 = 不限制）
+#     effects           效果列表，按顺序执行（可编排「先扣款、再发物、再给权限」）:
+#       - type: command             执行服务器指令
+#         command: 指令模板，支持 {player}=玩家名、{amount}=数量
+#         target:  可选，强制指定类别 console / account / entity
+#                  （不填自动识别：give/clear/tp/effect 等=entity，eco/lp/pex 等=account）
+#       - type: economy.take        扣钱（默认命令: eco take {player} {amount}）
+#                                   金额 = price × 数量；可用 amount 覆盖，可用 command 换经济插件命令
+#       - type: economy.give        发钱（默认命令: eco give {player} {amount}），amount 必填
+#     display           前端展示（可选）
+#       icon / desc / group / sort / hidden（hidden: true 时仅代码调用，不出现在前端）
+# ==================================================
+strict: false
+
+actions:
+  # ---- 示例1：点击领取 → 立即扣 50 金币 → 立即执行指令 ----
+  # economy.take 离线也能立即扣款；give 属实体类命令，玩家离线时入队、上线自动补发；
+  # lp 权限命令属账号类，离线也立即生效。玩家体验：点击 → 扣钱成功 → 提示"物品上线到账"。
+  daily-bonus:
+    name: 每日礼包
+    price: 50
+    offline: queue
+    cooldown-seconds: 86400
+    balance-check: true
+    effects:
+      - type: economy.take
+      - type: command
+        command: "give {player} iron_ingot 10"
+        target: entity
+      - type: command
+        command: "lp user {player} parent add donor"
+        target: account
+    display:
+      icon: "🎁"
+      desc: "消耗 50 金币：10 铁锭 + 捐赠者权限（离线购买物品上线到账，权限立即生效）"
+      group: 日常
+      sort: 1
+
+  # ---- 示例2：纯权限动作 —— 离线也立即生效 ----
+  unlock-vip:
+    name: 解锁VIP
+    price: 500
+    offline: run
+    effects:
+      - type: command
+        command: "lp user {player} parent add vip"
+    display:
+      icon: "👑"
+      desc: "500 金币解锁 VIP 权限组，离线购买立即生效"
+      group: 特权
+      sort: 2
+
+  # ---- 示例3：出售 —— 必须在线（要拿走背包物品） ----
+  sell-wheat:
+    name: 出售小麦
+    offline: reject
+    effects:
+      - type: command
+        command: "clear {player} wheat"
+        target: entity
+      - type: economy.give
+        amount: 5
+    display:
+      icon: "🌾"
+      desc: "出售背包中的小麦：每次 5 金币（需在线操作）"
+      group: 商城
+      sort: 3
+
+  # ---- 示例4：新人礼包（原 home.yml gift 段迁移而来）——
+  # claim-period: once = 一人一生只能领一次（跨重启持久去重，落 homepage_action_claim）；
+  # 物品用 give 命令（实体类，离线自动入队、上线补发）；指令原样执行。
+  claim-gift:
+    name: 新人礼包
+    offline: queue
+    claim-period: once
+    claim-window-start: ""
+    claim-window-end: ""
+    effects:
+      - type: command
+        command: "give {player} DIAMOND 16"
+        target: entity
+      - type: command
+        command: "give {player} IRON_INGOT 32"
+        target: entity
+      - type: command
+        command: "say 欢迎新玩家 {player} 加入服务器！"
+        target: console
+    display:
+      icon: "🎁"
+      desc: "新玩家专属礼包：16 钻石 + 32 铁锭（离线领取上线自动到账）"
+      group: 新人
+      sort: 4
+

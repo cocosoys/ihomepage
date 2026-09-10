@@ -2,5 +2,19 @@
 # 首页展示内容（标题/简介/QQ/礼包物品等）全部在 home.yml 中配置。
 enabled: true
 cache-seconds: 0
+
 homepage:
-  current: ""
+  # 当前生效的主页名称（须存在于下方 pages 中；留空/不存在则自动回退 "default"）。
+  current: "default"
+
+  # 主页位置映射：主页名 -> 位置描述，支持三种取值：
+  #   1) 相对路径：相对本插件数据目录（plugins/ihomepages/）解析为绝对路径。
+  #      例如 dist/index.html 即 plugins/ihomepages/dist/index.html
+  #      （首次启动自动从 jar 释放的内置模板，可直接编辑，编辑后刷新页面或 /soyshttp homepage reload 生效）；
+  #   2) 绝对路径：如 D:/server/home/alt.html（伺服指定磁盘文件，路径须以盘符/斜杠开头）；
+  #   3) 网络 URL：如 https://example.com/home.html（按需拉取并缓存 5 分钟，失败回退默认首页）。
+  # 缺少 "default" 键时自动补 default -> dist/index.html。
+  pages:
+    default: "dist/index.html"
+    # alt: "D:/server/home/alt.html"
+    # remote: "https://example.com/home.html"

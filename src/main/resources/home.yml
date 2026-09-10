@@ -42,34 +42,5 @@ ui:
   show-qq: true
   show-download: true
   show-intro: true
+  # 礼包按钮改为前端渲染 actions.yml 中的 claim-gift 动作（/api/homepage/action/list + /action/status）
   show-gift: true
-gift:
-  enabled: true
-  title: "新人礼包"
-  description: "登录游戏即可领取专属新人礼包"
-  show-button: true
-  claim-limit:
-    mode: once
-    start: ""
-    end: ""
-  items:
-    diamond:
-      name: "钻石"
-      show: true
-      enable: true
-      icon: ""
-      material: "minecraft:diamond"
-      amount: 1
-    apple:
-      name: "苹果"
-      show: true
-      enable: true
-      icon: ""
-      material: "minecraft:apple"
-      amount: 16
-  commands:
-    welcome:
-      name: "欢迎广播"
-      show: true
-      enable: true
-      cmd: "say {player} 领取了新人礼包"

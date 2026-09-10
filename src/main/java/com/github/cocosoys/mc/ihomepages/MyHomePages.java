@@ -7,6 +7,13 @@ import com.github.cocosoys.mc.soyshttpovermc.HttpOverMcPlugin;
 import com.github.cocosoys.mc.soyshttpovermc.api.SoysHttpOverMcApi;
 import com.github.cocosoys.mc.ihomepages.api.HomeApi;
 import com.github.cocosoys.mc.ihomepages.api.impl.HomeApiImpl;
+import com.github.cocosoys.mc.ihomepages.action.WebActionExecutor;
+import com.github.cocosoys.mc.ihomepages.action.WebActionManager;
+import com.github.cocosoys.mc.ihomepages.action.config.ActionConfigValidator;
+import com.github.cocosoys.mc.ihomepages.action.exec.CommandClassifier;
+import com.github.cocosoys.mc.ihomepages.action.exec.CommandRunner;
+import com.github.cocosoys.mc.ihomepages.action.queue.ActionClaimStore;
+import com.github.cocosoys.mc.ihomepages.action.queue.OfflineTaskQueue;
 import com.github.cocosoys.mc.ihomepages.config.IHomeConfigExporter;
 import com.github.cocosoys.mc.ihomepages.config.JsonHomeConfigExporter;
 import com.github.cocosoys.mc.ihomepages.config.MainConfigReader;
@@ -15,8 +22,8 @@ import com.github.cocosoys.mc.ihomepages.homepage.HomepageRegistry;
 import com.github.cocosoys.mc.ihomepages.homepage.HomepageState;
 import com.github.cocosoys.mc.ihomepages.command.HomepageSubCommand;
 import com.github.cocosoys.mc.ihomepages.spring.controller.HomeApiController;
-import com.github.cocosoys.mc.ihomepages.spring.impl.GiftServiceImpl;
-import com.github.cocosoys.mc.ihomepages.spring.service.IGiftService;
+import com.github.cocosoys.mc.ihomepages.listener.ActionPendingListener;
+import com.github.cocosoys.mc.ihomepages.migration.GiftDataMigrator;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -47,6 +54,9 @@ public final class MyHomePages extends JavaPlugin {
 
     private static volatile HomeApi homeApi;
 
+    /** 单例引用：供静态工具方法（如 {@link #resolveWebHomeSpec}）取本插件数据目录。 */
+    private static volatile MyHomePages instance;
+
     /** 公开首页门面：初始化完成后方可用；未初始化或自定义主页被禁用时为 null。 */
     public static HomeApi getHomeApi() {
         return homeApi;
@@ -54,6 +64,7 @@ public final class MyHomePages extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        instance = this;
         // 宿主必须在运行时已加载（softdepend 通常保证先加载；此处在多个启动路径下兜底校验）
         HttpOverMcPlugin host = HttpOverMcPlugin.getInstance();
         if (host == null || Bukkit.getPluginManager().getPlugin("SOYSHTTPOverMC") == null) {
@@ -96,11 +107,13 @@ public final class MyHomePages extends JavaPlugin {
         for (Map.Entry<String, String> e : specs.entrySet()) {
             registry.register(e.getKey(), e.getValue());
         }
+        // 恢复持久化的当前主页名，使 getCurrent()/命令查询在启动后即可用（此前缺失导致 list 不标当前、info 显示未设置）
+        registry.setCurrentName(current);
 
         HomeApi apiFacade = new HomeApiImpl(host, registry, hpState);
         homeApi = apiFacade;
 
-        // 3.0) 释放 dist / language 目录到本插件数据目录（供管理/自定义），并优先伺服磁盘副本
+        // 3.0) 释放 dist / language 目录到本插件数据目录（供管理/自定义）
         // 注意：getDataFolder() 本身即插件数据目录（plugins/ihomepages），切勿再拼 "ihomepages"，否则会多套一层。
         extractResourceDir(this, "dist", new File(getDataFolder(), "dist"));
         extractResourceDir(this, "language", new File(getDataFolder(), "language"));
@@ -108,54 +121,88 @@ public final class MyHomePages extends JavaPlugin {
         // 3.1) 启动即把当前主页位置写入宿主 pages.yml 的 web.home 并应用（不触发全量 reload，仅应用运行中的 WebFrontendHandler）
         String curSpec = registry.getSpec(current);
         if (curSpec != null) {
-            String value = resolveWebHomeSpec(host, curSpec);
+            String value = resolveWebHomeSpec(curSpec);
             host.getDelegate().setWebHome(value);
             host.getWebFrontend().setHomeSpec(value);
             log.infoT("mhp.apply-home", "已应用当前主页到 web.home: {0} -> {1}", current, value);
         }
 
-        // 3.2) 注册 /soyshttp homepage 子指令（宿主 initCommand 之后再注入，命令方可生效）
-        api.getExtension().registerSubCommand(new HomepageSubCommand(host, apiFacade));
+        // 3.1.5) 网页动作基础层（actions.yml 配置驱动）：管理器/分类器/队列/去重存储/执行门面
+        ActionConfigValidator actionValidator = new ActionConfigValidator();
+        WebActionManager actionManager = new WebActionManager(this, actionValidator);
+        actionManager.load();
+        CommandClassifier classifier = new CommandClassifier();
+        OfflineTaskQueue taskQueue = new OfflineTaskQueue(this);
+        CommandRunner runner = new CommandRunner(this, classifier, taskQueue);
+        ActionClaimStore claimStore = new ActionClaimStore();
+        WebActionExecutor actionExecutor = new WebActionExecutor(this, actionManager, runner, taskQueue);
 
-        // 3.3) reload 钩子：宿主 /soyshttp reload 时按 homepage.current 重新应用 web.home（两种自动检测机制之一）
+        // 3.1.6) 礼包旧数据 → 动作链路一次性迁移（在补发监听注册前执行，迁移结果随日志输出）
+        String migrateMsg = new GiftDataMigrator(this, taskQueue, claimStore).migrate();
+        if (!migrateMsg.isEmpty()) {
+            log.infoT("mhp.migrated", migrateMsg);
+        }
+
+        // 3.2) 注册 /soyshttp homepage 子指令（宿主 initCommand 之后再注入，命令方可生效）
+        api.getExtension().registerSubCommand(
+                new HomepageSubCommand(host, apiFacade, actionManager, taskQueue));
+
+        // 3.3) reload 钩子：宿主 /soyshttp reload 时按 homepage.current 重新应用 web.home（两种自动检测机制之一），
+        //      并顺带热重载 actions.yml（服主改配置后随 /soyshttp reload 生效）
         api.registerReloadHook(() -> {
+            actionManager.reload();
             String cur = hpState.readCurrent();
             if (cur != null && !cur.isEmpty()) {
                 String s = registry.getSpec(cur);
                 if (s != null) {
                     HttpOverMcPlugin.getInstance().getWebFrontend()
-                            .setHomeSpec(resolveWebHomeSpec(HttpOverMcPlugin.getInstance(), s));
+                            .setHomeSpec(resolveWebHomeSpec(s));
                 }
             }
         });
 
-        // 4) 接口（配置 JSON / 实时数据 / 礼包领取 / 状态查询）—— 与主页_switch 机制无关，保留
+        // 4) 接口（配置 JSON / 实时数据 / 网页动作）—— 与主页_switch 机制无关，保留
         YamlHomeConfigSource home = new YamlHomeConfigSource(this);
         home.load();
-        IHomeConfigExporter exporter = new JsonHomeConfigExporter(api.getHttpClient(), getDataFolder());
-        IGiftService gift = new GiftServiceImpl(cfgReader, home, this);
-        HomeApiController controller = new HomeApiController(home, exporter, gift, this);
+        IHomeConfigExporter exporter = new JsonHomeConfigExporter();
+        HomeApiController controller = new HomeApiController(
+                home, exporter, actionManager, actionExecutor, taskQueue, claimStore, this);
         api.getApiRegistration().registerController(controller, this);
 
+        // 4.1) 动作离线任务补发：玩家上线时主线程自动补发
+        Bukkit.getPluginManager().registerEvents(new ActionPendingListener(taskQueue), this);
+
         log.infoT("mhp.registered",
-                "已注册自定义主页：主页位置 {0} 个（current={1}），API: /api/homepage/{config,live,gift/claim,gift/status}",
-                specs.size(), current);
+                "已注册自定义主页：主页位置 {0} 个（current={1}），API: /api/homepage/{config,live,action/list,action/execute,action/status}，网页动作 {2} 个",
+                specs.size(), current, actionManager.all().size());
     }
 
     @Override
     public void onDisable() {
         homeApi = null;
+        instance = null;
     }
 
-    /** 把主页位置描述解析为 web.home 取值：URL/绝对路径原样；相对路径按宿主数据目录解析为绝对路径。 */
-    public static String resolveWebHomeSpec(HttpOverMcPlugin plugin, String spec) {
+    /**
+     * 把主页位置描述解析为 web.home 取值。
+     * <ul>
+     *   <li>网络 URL / 绝对路径：原样透传；</li>
+     *   <li>相对路径：按<b>本插件数据目录</b>（plugins/ihomepages/，即 dist 实际释放处）解析为绝对路径。</li>
+     * </ul>
+     * <p>不能把相对路径直接交给宿主：宿主的 {@code HomePageResolver} 对 {@code dist/} 前缀有特殊语义
+     * （剥掉前缀后读<b>宿主自身 jar 内置 /dist/</b>），会绕过本插件释放到磁盘的 dist。
+     * 因此这里一律先解析成绝对路径，宿主按本地磁盘文件伺服。</p>
+     */
+    public static String resolveWebHomeSpec(String spec) {
         if (spec == null) return "";
         String s = spec.trim();
         if (s.isEmpty()) return "";
         if (s.startsWith("http://") || s.startsWith("https://")) return s;
         File f = new File(s);
         if (f.isAbsolute()) return s;
-        return new File(plugin.getDataFolder(), s).getAbsolutePath();
+        MyHomePages inst = instance;
+        File base = inst != null ? inst.getDataFolder() : new File("plugins/ihomepages");
+        return new File(base, s).getAbsolutePath();
     }
 
     /** 从插件 jar 资源读取字节（用于伺服 dist/index.html）。 */
