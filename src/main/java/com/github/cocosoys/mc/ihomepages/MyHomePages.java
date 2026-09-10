@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import com.github.cocosoys.mc.soyshttpovermc.HttpOverMcPlugin;
 import com.github.cocosoys.mc.soyshttpovermc.api.SoysHttpOverMcApi;
+import com.github.cocosoys.mc.soyshttpovermc.i18n.I18n;
 import com.github.cocosoys.mc.ihomepages.api.HomeApi;
 import com.github.cocosoys.mc.ihomepages.api.impl.HomeApiImpl;
 import com.github.cocosoys.mc.ihomepages.action.WebActionExecutor;
@@ -56,6 +57,9 @@ public final class MyHomePages extends JavaPlugin {
 
     /** 单例引用：供静态工具方法（如 {@link #resolveWebHomeSpec}）取本插件数据目录。 */
     private static volatile MyHomePages instance;
+
+    /** 语言源是否已注册（进程内幂等：插件 reload 不重复注册，避免宿主语言源列表膨胀）。 */
+    private static volatile boolean langRegistered = false;
 
     /** 公开首页门面：初始化完成后方可用；未初始化或自定义主页被禁用时为 null。 */
     public static HomeApi getHomeApi() {
@@ -118,6 +122,10 @@ public final class MyHomePages extends JavaPlugin {
         extractResourceDir(this, "dist", new File(getDataFolder(), "dist"));
         extractResourceDir(this, "language", new File(getDataFolder(), "language"));
 
+        // 3.0.1) 把本插件语言包注册为宿主 I18n 的额外语言源（合并进默认作用域：
+        //        log.infoT / msgT / I18n.t 的裸 key 即可命中，无需带前缀；与宿主 key 空间无冲突）
+        registerLanguageSource();
+
         // 3.1) 启动即把当前主页位置写入宿主 pages.yml 的 web.home 并应用（不触发全量 reload，仅应用运行中的 WebFrontendHandler）
         String curSpec = registry.getSpec(current);
         if (curSpec != null) {
@@ -175,6 +183,27 @@ public final class MyHomePages extends JavaPlugin {
         log.infoT("mhp.registered",
                 "已注册自定义主页：主页位置 {0} 个（current={1}），API: /api/homepage/{config,live,action/list,action/execute,action/status}，网页动作 {2} 个",
                 specs.size(), current, actionManager.all().size());
+    }
+
+    /**
+     * 注册本插件语言包（zh_cn / en_us）为宿主 I18n 的额外语言源。
+     * <p>合并进宿主默认作用域后，{@code log.infoT / msgT / I18n.t} 的裸 key 即可查表，
+     * 未命中回退代码内模板。文件缺失（释放失败等）时跳过注册，不阻塞启动。</p>
+     */
+    private void registerLanguageSource() {
+        if (langRegistered) {
+            return;
+        }
+        File langDir = new File(getDataFolder(), "language");
+        File zh = new File(langDir, "zh_cn.yml");
+        File en = new File(langDir, "en_us.yml");
+        if (zh.isFile()) {
+            I18n.registerLanguageSource(null, "ihomepages", "自定义主页插件", "zh_cn", zh.getAbsolutePath());
+        }
+        if (en.isFile()) {
+            I18n.registerLanguageSource(null, "ihomepages", "自定义主页插件", "en_us", en.getAbsolutePath());
+        }
+        langRegistered = true;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.github.cocosoys.mc.ihomepages.action.queue;
 
+import lombok.CustomLog;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -16,7 +17,10 @@ import java.util.concurrent.CountDownLatch;
  *
  * <p>「及时性执行」的延迟通道：实体类命令在玩家离线时入队（命令快照已填充），
  * 玩家上线由 {@link #deliver(Player)} 逐条补执行并标记状态（一人可多条，UUID 主键互不覆盖）。</p>
+ *
+ * <p>日志经 i18n（key 见 language/*.yml，log.action.*）。</p>
  */
+@CustomLog
 public class OfflineTaskQueue {
 
     private final JavaPlugin plugin;
@@ -33,7 +37,7 @@ public class OfflineTaskQueue {
         try {
             YAML.Pojo.insert(task);
         } catch (RuntimeException e) {
-            plugin.getLogger().warning("离线任务入队失败: " + e.getMessage());
+            log.warnT("log.action.queue-fail", "离线任务入队失败: {0}", e.getMessage());
         }
     }
 
@@ -106,11 +110,13 @@ public class OfflineTaskQueue {
                     delivered[0]++;
                 } catch (Throwable ex) {
                     mark(t.getId(), "failed");
-                    plugin.getLogger().warning("离线任务补发失败 (" + t.getId() + "): " + ex.getMessage());
+                    log.warnT("log.action.deliver-fail", "离线任务补发失败 ({0}): {1}",
+                            t.getId(), ex.getMessage());
                 }
             }
             if (delivered[0] > 0) {
-                plugin.getLogger().info("已补发玩家 " + player.getName() + " 的离线任务 " + delivered[0] + " 条");
+                log.infoT("log.action.delivered", "已补发玩家 {0} 的离线任务 {1} 条",
+                        player.getName(), delivered[0]);
             }
         };
         if (Bukkit.isPrimaryThread()) {

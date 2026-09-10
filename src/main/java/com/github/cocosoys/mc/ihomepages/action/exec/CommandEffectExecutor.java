@@ -1,5 +1,6 @@
 package com.github.cocosoys.mc.ihomepages.action.exec;
 
+import com.github.cocosoys.mc.soyshttpovermc.i18n.I18n;
 import com.github.cocosoys.mc.ihomepages.action.model.ActionContext;
 import com.github.cocosoys.mc.ihomepages.action.model.WebActionEffect;
 
@@ -33,7 +34,8 @@ public class CommandEffectExecutor implements EffectExecutor {
                 return false; // 已入队，待上线补执行
             default:
                 throw new ActionException("rejected-offline",
-                        "该动作需要玩家在线才能完成（离线策略为拒绝）");
+                        I18n.t("action.exec.need-online",
+                                "该动作需要玩家在线才能完成（离线策略为拒绝）"));
         }
     }
 

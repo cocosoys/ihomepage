@@ -1,5 +1,6 @@
 package com.github.cocosoys.mc.ihomepages.migration;
 
+import lombok.CustomLog;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -30,7 +31,10 @@ import java.util.UUID;
  * </ul>
  *
  * <p>迁移目标动作 ID 固定 {@code claim-gift}（与 actions.yml 模板示例一致；服主若改名需同步改此处）。</p>
+ *
+ * <p>日志经 i18n（key 见 language/*.yml，log.action.migrate-*）。</p>
  */
+@CustomLog
 public class GiftDataMigrator {
 
     /** 迁移写入的目标动作 ID。 */
@@ -78,7 +82,8 @@ public class GiftDataMigrator {
             }
             List<OfflineTask> converted = toOfflineTasks(p);
             if (converted.isEmpty()) {
-                plugin.getLogger().warning("[迁移] 礼包待补发记录 " + p.getId() + " 无可转换内容，保留原记录");
+                log.warnT("log.action.migrate-pending-empty",
+                        "[迁移] 礼包待补发记录 {0} 无可转换内容，保留原记录", p.getId());
                 continue;
             }
             boolean ok = true;
@@ -87,7 +92,7 @@ public class GiftDataMigrator {
                     YAML.Pojo.insert(t);
                 } catch (RuntimeException e) {
                     ok = false;
-                    plugin.getLogger().warning("[迁移] 离线任务写入失败: " + e.getMessage());
+                    log.warnT("log.action.migrate-task-fail", "[迁移] 离线任务写入失败: {0}", e.getMessage());
                 }
             }
             if (ok) {
@@ -121,7 +126,7 @@ public class GiftDataMigrator {
                     }
                 }
             } catch (Throwable t) {
-                plugin.getLogger().warning("[迁移] 物品快照解析失败: " + t.getMessage());
+                log.warnT("log.action.migrate-items-fail", "[迁移] 物品快照解析失败: {0}", t.getMessage());
             }
         }
         // 指令原样
@@ -137,7 +142,7 @@ public class GiftDataMigrator {
                     }
                 }
             } catch (Throwable t) {
-                plugin.getLogger().warning("[迁移] 指令快照解析失败: " + t.getMessage());
+                log.warnT("log.action.migrate-commands-fail", "[迁移] 指令快照解析失败: {0}", t.getMessage());
             }
         }
         return out;
@@ -170,7 +175,7 @@ public class GiftDataMigrator {
                 YAML.Pojo.deleteById(LegacyGiftClaim.class, c.getPlayerUuid());
                 moved++;
             } catch (Throwable t) {
-                plugin.getLogger().warning("[迁移] 领取记录转换失败: " + t.getMessage());
+                log.warnT("log.action.migrate-claim-fail", "[迁移] 领取记录转换失败: {0}", t.getMessage());
             }
         }
         return moved;

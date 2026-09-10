@@ -1,5 +1,6 @@
 package com.github.cocosoys.mc.ihomepages.action.exec;
 
+import com.github.cocosoys.mc.soyshttpovermc.i18n.I18n;
 import com.github.cocosoys.mc.ihomepages.action.model.ActionContext;
 import com.github.cocosoys.mc.ihomepages.action.model.WebActionEffect;
 
@@ -40,7 +41,8 @@ public class EconomyEffectExecutor implements EffectExecutor {
         boolean take = "economy.take".equals(type);
         boolean give = "economy.give".equals(type);
         if (!take && !give) {
-            throw new ActionException("invalid-type", "不支持的经济效果类型: " + type);
+            throw new ActionException("invalid-type",
+                    I18n.t("action.exec.invalid-economy-type", "不支持的经济效果类型: {0}", type));
         }
 
         double amount;
@@ -50,7 +52,9 @@ public class EconomyEffectExecutor implements EffectExecutor {
         } else {
             amount = effect.getAmount();
             if (amount <= 0) {
-                throw new ActionException("invalid-amount", "economy.give 效果必须配置 amount（发放金额）");
+                throw new ActionException("invalid-amount",
+                        I18n.t("action.exec.invalid-amount",
+                                "economy.give 效果必须配置 amount（发放金额）"));
             }
         }
 

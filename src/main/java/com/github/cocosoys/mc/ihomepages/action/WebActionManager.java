@@ -1,9 +1,11 @@
 package com.github.cocosoys.mc.ihomepages.action;
 
+import lombok.CustomLog;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.github.cocosoys.mc.soyshttpovermc.i18n.I18n;
 import com.github.cocosoys.mc.ihomepages.action.config.ActionConfigValidator;
 import com.github.cocosoys.mc.ihomepages.action.model.WebAction;
 import com.github.cocosoys.mc.ihomepages.action.model.WebActionEffect;
@@ -21,7 +23,10 @@ import java.util.Map;
  * <p>服主编辑 actions.yml 后执行 {@code /soyshttp homepage actions reload}（或宿主 reload）即生效，
  * 无需重启。加载策略：默认宽容（坏动作跳过并告警，好动作照常）；配置顶部 {@code strict: true}
  * 时任一错误全部拒绝并沿用旧配置。已入队的离线任务不受重载影响（快照独立）。</p>
+ *
+ * <p>日志与 lastErrors 均经 {@link I18n#t} 翻译（key 见 language/*.yml），未命中回退代码内模板。</p>
  */
+@CustomLog
 public class WebActionManager {
 
     private final JavaPlugin plugin;
@@ -44,8 +49,9 @@ public class WebActionManager {
         }
         File file = new File(plugin.getDataFolder(), "actions.yml");
         if (!file.isFile()) {
-            lastErrors = Collections.singletonList("actions.yml 不存在（未释放模板？）");
-            plugin.getLogger().warning("[actions] " + lastErrors.get(0));
+            lastErrors = Collections.singletonList(
+                    I18n.t("action.validate.file-missing", "actions.yml 不存在（未释放模板？）"));
+            log.warnT("log.action.load-fail", "[actions] {0}", lastErrors.get(0));
             return;
         }
         YamlConfiguration y = YamlConfiguration.loadConfiguration(file);
@@ -55,8 +61,9 @@ public class WebActionManager {
         List<String> errors = new ArrayList<>();
         ConfigurationSection sec = y.getConfigurationSection("actions");
         if (sec == null) {
-            lastErrors = Collections.singletonList("actions.yml 缺少顶层 actions: 段");
-            plugin.getLogger().warning("[actions] " + lastErrors.get(0));
+            lastErrors = Collections.singletonList(
+                    I18n.t("action.validate.no-actions-section", "actions.yml 缺少顶层 actions: 段"));
+            log.warnT("log.action.load-fail", "[actions] {0}", lastErrors.get(0));
             return;
         }
         for (String id : sec.getKeys(false)) {
@@ -69,22 +76,23 @@ public class WebActionManager {
             }
         }
         for (String e : errors) {
-            plugin.getLogger().warning("[actions] " + e);
+            log.warnT("log.action.parse-fail", "[actions] 动作解析失败: {0}", e);
         }
 
         // strict 模式：任一错误 → 全部拒绝，沿用旧配置
         if (newStrict && !errors.isEmpty()) {
             lastErrors = errors;
             strict = newStrict;
-            plugin.getLogger().warning("[actions] strict 模式已开启且配置存在 "
-                    + errors.size() + " 处错误，本次全部拒绝加载（沿用旧配置）。");
+            log.warnT("log.action.strict-rejected",
+                    "[actions] strict 模式已开启且配置存在 {0} 处错误，本次全部拒绝加载（沿用旧配置）。",
+                    errors.size());
             return;
         }
         this.strict = newStrict;
         this.actions = parsed;
         this.lastErrors = errors;
-        plugin.getLogger().info("[actions] 已加载动作 " + parsed.size() + " 个"
-                + (errors.isEmpty() ? "" : "（跳过 " + errors.size() + " 处错误动作）"));
+        log.infoT("log.action.loaded", "[actions] 已加载动作 {0} 个（跳过 {1} 处错误动作）",
+                parsed.size(), errors.size());
     }
 
     /** 热重载（与 load 等价；由运维命令 / reload 钩子调用）。 */

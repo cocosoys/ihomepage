@@ -215,11 +215,13 @@ public class HomepageSubCommand extends SubCommand {
                 if (p != null && taskQueue != null) {
                     n = taskQueue.deliver(p);
                 }
-                msgT(sender, "command.homepage.actions-flush-result",
-                        p == null
-                                ? "§e玩家 {0} 不在线，无法补发（上线时将自动补发）。"
-                                : "§a已补发玩家 {0} 的离线任务 {1} 条。",
-                        player, n);
+                if (p == null) {
+                    msgT(sender, "command.homepage.actions-flush-offline",
+                            "§e玩家 {0} 不在线，无法补发（上线时将自动补发）。", player);
+                } else {
+                    msgT(sender, "command.homepage.actions-flush-result",
+                            "§a已补发玩家 {0} 的离线任务 {1} 条。", player, n);
+                }
                 break;
             }
             default: {

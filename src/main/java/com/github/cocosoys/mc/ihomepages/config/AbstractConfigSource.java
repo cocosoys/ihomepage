@@ -3,6 +3,8 @@ package com.github.cocosoys.mc.ihomepages.config;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.github.cocosoys.mc.soyshttpovermc.i18n.I18n;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +40,8 @@ public abstract class AbstractConfigSource {
                     f.createNewFile(); // 无默认模板：建空文件，避免反复复制失败
                 }
             } catch (IOException e) {
-                throw new RuntimeException("无法初始化配置 " + dataRelative, e);
+                throw new RuntimeException(
+                        I18n.t("config.init-fail", "无法初始化配置 {0}", dataRelative), e);
             }
         }
         return f;

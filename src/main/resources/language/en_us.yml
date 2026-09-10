@@ -1,6 +1,9 @@
 # ihomepages English language pack (keys map 1:1 to I18n.t / msgT / infoT / warnT keys in code)
+# Registered by MyHomePages at startup as an extra language source of the host I18n
+# (merged into the default scope), so keys must be de-prefixed raw keys.
+# DO NOT use host-owned key spaces such as gift.* / exception.*.
 
-# ===== /soyshttp homepage subcommand =====
+# ===== /soyshttp homepage subcommand: homepage management =====
 command.homepage.current: "§aCurrent homepage: §f{0}"
 command.homepage.current-marker: " §b← current"
 command.homepage.detail: "Homepage list view and switching management\n  /soyshttp homepage list          —— list all recorded homepage locations\n  /soyshttp homepage set <name>   —— switch to the specified homepage (writes homepage.current + syncs web.home + reload)\n  /soyshttp homepage info          —— show the current homepage name\n  /soyshttp homepage reload        —— re-apply the current homepage (refresh web.home from homepage.current, no switch)\nexamples:\n  /soyshttp homepage list\n  /soyshttp homepage set default\n  /soyshttp homepage reload"
@@ -13,40 +16,102 @@ command.homepage.reloaded: "§aRe-applied web.home from the current homepage."
 command.homepage.set-usage: "§cUsage: /{0} homepage set <homepage-name>"
 command.homepage.switched: "§aSwitched to homepage: §f{0}§a (web.home synced and reloaded)"
 command.homepage.uninit: "§cHomepage module is not initialized yet."
-command.homepage.unknown: "§cUnknown subcommand: {0}. Available: list / set <name> / info / reload"
-command.homepage.usage: "homepage <list|set <name>|info|reload> —— homepage list view and switching management"
+command.homepage.unknown: "§cUnknown subcommand: {0}. Available: list / set <name> / info / reload / actions ..."
+command.homepage.usage: "homepage <list|set <name>|info|reload|actions ...> —— homepage list view and switching management"
 command.homepage.usage-short: "Usage: /{0} {1}"
+
+# ===== /soyshttp homepage actions ops commands =====
+command.homepage.actions-empty: "§eNo web actions loaded (check actions.yml)."
+command.homepage.actions-title: "§aLoaded web actions ({0}):"
+command.homepage.actions-item: "  §7- §f{0} §7price:§f{1} §7offline:§f{2}§7{3}"
+command.homepage.actions-valid: "§aactions.yml validation passed, {0} action(s) loaded."
+command.homepage.actions-errors-title: "§cactions.yml has {0} error(s):"
+command.homepage.actions-error: "  §c- {0}"
+command.homepage.actions-reloaded: "§aReloaded actions.yml ({0} action(s), {1} error(s); queued tasks unaffected)."
+command.homepage.actions-queue-usage: "§cUsage: /{0} homepage actions queue <player>"
+command.homepage.actions-queue-result: "§aPlayer {0} currently has {1} pending offline task(s)."
+command.homepage.actions-flush-usage: "§cUsage: /{0} homepage actions flush <player>"
+command.homepage.actions-flush-result: "§aDelivered {1} pending offline task(s) for player {0}."
+command.homepage.actions-flush-offline: "§ePlayer {0} is offline and cannot be flushed (will auto-deliver on join)."
+command.homepage.actions-usage: "§cUsage: /{0} homepage actions <list|validate|reload|queue <player>|flush <player>>"
 
 # ===== Logs (homepage / resource extraction) =====
 log.homepage.extract-fail: "Failed to extract directory {0}: {1}"
 log.homepage.extract-jar-missing: "Cannot locate plugin jar, skipping extraction of {0}"
 log.homepage.extracted: "Extracted directory {0} → {1}"
-log.homepage.icon-download-error: "Icon download exception: {0} - {1}"
-log.homepage.icon-download-failed: "Icon download failed: {0} (HTTP {1})"
-log.homepage.icon-load-failed: "Icon load failed: {0} - {1}"
-log.homepage.icon-read-failed: "Failed to read icon file: {0} - {1}"
 log.homepage.register: "Recorded homepage location: {0} -> {1}"
+
+# ===== Logs (web action layer) =====
+log.action.load-fail: "[actions] {0}"
+log.action.parse-fail: "[actions] Failed to parse action: {0}"
+log.action.strict-rejected: "[actions] strict mode is on and the config has {0} error(s); all actions rejected (keeping previous config)."
+log.action.loaded: "[actions] Loaded {0} action(s) (skipped {1} erroneous action(s))"
+log.action.effect-failed: "[actions] Player {0} effect {1} failed: {2}"
+log.action.executed: "[actions] {0} executed action {1} ({2}): {3}"
+log.action.queue-fail: "Failed to enqueue offline task: {0}"
+log.action.deliver-fail: "Failed to deliver offline task ({0}): {1}"
+log.action.delivered: "Delivered {1} offline task(s) for player {0}"
+log.action.migrate-pending-empty: "[migration] Gift pending record {0} has nothing to convert; kept as-is"
+log.action.migrate-task-fail: "[migration] Failed to write offline task: {0}"
+log.action.migrate-items-fail: "[migration] Failed to parse items snapshot: {0}"
+log.action.migrate-commands-fail: "[migration] Failed to parse commands snapshot: {0}"
+log.action.migrate-claim-fail: "[migration] Failed to convert claim record: {0}"
 
 # ===== Homepage module (enable/disable/apply) =====
 mhp.apply-home: "Applied current homepage to web.home: {0} -> {1}"
 mhp.disabled: "Disabled in config.yml (enabled: false), skipping registration."
 mhp.host-missing: "SOYSHTTPOverMC host plugin not found, skipping custom homepage registration"
-mhp.registered: "Registered custom homepage: {0} location(s) (current={1}), API: /api/homepage/{config,live,gift/claim,gift/status}"
+mhp.migrated: "{0}"
+mhp.registered: "Registered custom homepage: {0} location(s) (current={1}), API: /api/homepage/{config,live,action/list,action/execute,action/status}, web actions {2}"
 
-# ===== Gift claim / status =====
-gift.config.no-config: "Homepage configuration is not loaded"
-gift.claim.already-claimed: "You have already claimed the gift"
-gift.claim.disabled: "Custom homepage feature is disabled"
-gift.claim.no-config: "Homepage configuration is not loaded"
-gift.claim.no-gift: "There is no claimable gift right now"
-gift.claim.offline-queued: "Claimed successfully. You are offline; items will be granted when you log in"
-gift.claim.out-of-window: "The gift is not claimable at this time"
-gift.claim.success: "Claimed successfully, the gift has been added to your inventory"
-gift.claim.unauthorized: "Please log in first before claiming the gift"
-gift.status.disabled: "Custom homepage feature is disabled"
-gift.status.no-config: "Homepage configuration is not loaded"
-gift.status.no-gift: "There is no claimable gift right now"
-gift.status.unauthorized: "Please log in first"
+# ===== API errors =====
+homepage.config.no-config: "Homepage configuration is not loaded"
 
-# ===== Exceptions =====
-exception.gift.time-parse-fail: "Cannot parse time string: {0}"
+# ===== Action execution results (player-visible, returned by /api/homepage/action/execute) =====
+action.result.invalid-player: "Player name is empty"
+action.result.not-found: "Action not found: {0}"
+action.result.invalid-args: "Incomplete execution arguments"
+action.result.already-claimed: "You have already claimed it; cannot claim again in this period"
+action.result.out-of-window: "Not in the claimable time window"
+action.result.cooldown: "Too frequent, please try again in {0} second(s)"
+action.result.insufficient-funds: "Insufficient balance, need {0}"
+action.result.unregistered-effect: "Unregistered effect type: {0}"
+action.result.effect-executed: "{0}executed"
+action.result.effect-queued: "{0}queued (granted on next login)"
+action.result.effect-rejected: "{0}rejected (requires being online)"
+action.result.failed: "Execution failed: {0}"
+action.result.need-online: "Failed: this action requires the player to be online"
+action.result.success-queued: "Applied immediately; item rewards will be granted when you log in"
+action.result.success: "Success, applied immediately"
+
+# ===== Action execution details (effect labels) =====
+action.effect.label-command: "command[{0}] "
+
+# ===== Action effect exceptions (aggregated into ActionResult) =====
+action.exec.invalid-economy-type: "Unsupported economy effect type: {0}"
+action.exec.invalid-amount: "economy.give effect requires amount (grant amount)"
+action.exec.need-online: "This action requires the player to be online (offline policy: reject)"
+
+# ===== actions.yml validation errors (shown to server admin via actions validate / reload) =====
+action.validate.file-missing: "actions.yml does not exist (template not extracted?)"
+action.validate.no-actions-section: "actions.yml is missing the top-level actions: section"
+action.validate.id-invalid: "actions.{0}.id invalid (lowercase letters/digits/underscore/hyphen, 1-32 chars)"
+action.validate.empty: "actions.{0} is empty"
+action.validate.name-empty: "actions.{0}.name is empty"
+action.validate.price-negative: "actions.{0}.price cannot be negative"
+action.validate.offline-invalid: "actions.{0}.offline invalid value \"{1}\", options: run / queue / reject"
+action.validate.cooldown-negative: "actions.{0}.cooldown-seconds cannot be negative"
+action.validate.claim-period-invalid: "actions.{0}.claim-period invalid value \"{1}\", options: once / daily / weekly"
+action.validate.window-start-format: "actions.{0}.claim-window-start must be yyyy-MM-dd HH:mm:ss: \"{1}\""
+action.validate.window-end-format: "actions.{0}.claim-window-end must be yyyy-MM-dd HH:mm:ss: \"{1}\""
+action.validate.effects-empty: "actions.{0}.effects is empty (at least one effect required)"
+action.validate.sort-negative: "actions.{0}.display.sort cannot be negative"
+action.validate.effect-empty: "{0} is empty"
+action.validate.effect-type-empty: "{0}.type is empty"
+action.validate.effect-type-unknown: "{0}.type \"{1}\" unregistered (available: command / economy.take / economy.give)"
+action.validate.effect-command-empty: "{0}.command is empty (required when type=command)"
+action.validate.effect-target-invalid: "{0}.target invalid value \"{1}\", options: console / account / entity"
+action.validate.effect-amount-invalid: "{0}.amount must be greater than 0 (economy.give requires a grant amount)"
+
+# ===== Config initialization =====
+config.init-fail: "Failed to initialize config {0}"

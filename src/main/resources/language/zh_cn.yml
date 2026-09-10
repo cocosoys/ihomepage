@@ -1,6 +1,8 @@
 # ihomepages 中文语言包（键与代码中 I18n.t / msgT / infoT / warnT 的 key 一一对应）
+# 本文件由 MyHomePages 启动时注册为宿主 I18n 的额外语言源（合并进默认作用域），
+# 因此键必须是「去前缀」原始键；请勿使用 gift.* / exception.* 等宿主占用的键空间。
 
-# ===== /soyshttp homepage 子指令 =====
+# ===== /soyshttp homepage 子指令：主页管理 =====
 command.homepage.current: "§a当前主页: §f{0}"
 command.homepage.current-marker: " §b← 当前"
 command.homepage.detail: "首页列表查看与切换管理\n  /soyshttp homepage list          —— 列出所有已记录的主页位置\n  /soyshttp homepage set <名称>   —— 切换到指定主页（写 homepage.current + 同步 web.home + reload）\n  /soyshttp homepage info          —— 显示当前主页名称\n  /soyshttp homepage reload        —— 重新应用当前主页（按 homepage.current 刷新 web.home，不切换）\n示例:\n  /soyshttp homepage list\n  /soyshttp homepage set default\n  /soyshttp homepage reload"
@@ -13,40 +15,102 @@ command.homepage.reloaded: "§a已按当前主页重新应用 web.home。"
 command.homepage.set-usage: "§c用法: /{0} homepage set <首页名称>"
 command.homepage.switched: "§a已切换到主页: §f{0}§a（已同步 web.home 并 reload）"
 command.homepage.uninit: "§c首页模块尚未初始化。"
-command.homepage.unknown: "§c未知子指令: {0}。可用: list / set <name> / info / reload"
-command.homepage.usage: "homepage <list|set <name>|info|reload> —— 首页列表查看与切换管理"
+command.homepage.unknown: "§c未知子指令: {0}。可用: list / set <name> / info / reload / actions ..."
+command.homepage.usage: "homepage <list|set <name>|info|reload|actions ...> —— 首页与网页动作管理"
 command.homepage.usage-short: "用法: /{0} {1}"
+
+# ===== /soyshttp homepage actions 运维命令 =====
+command.homepage.actions-empty: "§e当前没有已加载的网页动作（检查 actions.yml 配置）。"
+command.homepage.actions-title: "§a已加载网页动作 ({0}):"
+command.homepage.actions-item: "  §7- §f{0} §7价格:§f{1} §7离线:§f{2}§7{3}"
+command.homepage.actions-valid: "§aactions.yml 校验通过，已加载 {0} 个动作。"
+command.homepage.actions-errors-title: "§cactions.yml 存在 {0} 处错误:"
+command.homepage.actions-error: "  §c- {0}"
+command.homepage.actions-reloaded: "§a已热重载 actions.yml（当前 {0} 个动作，{1} 处错误；已入队任务不受影响）。"
+command.homepage.actions-queue-usage: "§c用法: /{0} homepage actions queue <玩家名>"
+command.homepage.actions-queue-result: "§a玩家 {0} 当前有 {1} 条待补发的离线任务。"
+command.homepage.actions-flush-usage: "§c用法: /{0} homepage actions flush <玩家名>"
+command.homepage.actions-flush-result: "§a已补发玩家 {0} 的离线任务 {1} 条。"
+command.homepage.actions-flush-offline: "§e玩家 {0} 不在线，无法补发（上线时将自动补发）。"
+command.homepage.actions-usage: "§c用法: /{0} homepage actions <list|validate|reload|queue <玩家>|flush <玩家>>"
 
 # ===== 日志（主页/资源释放） =====
 log.homepage.extract-fail: "释放目录 {0} 失败: {1}"
 log.homepage.extract-jar-missing: "无法定位插件 jar，跳过 {0} 目录释放"
 log.homepage.extracted: "已释放目录 {0} → {1}"
-log.homepage.icon-download-error: "下载图标异常: {0} - {1}"
-log.homepage.icon-download-failed: "下载图标失败: {0} (HTTP {1})"
-log.homepage.icon-load-failed: "加载图标失败: {0} - {1}"
-log.homepage.icon-read-failed: "读取图标文件失败: {0} - {1}"
 log.homepage.register: "记录主页位置: {0} -> {1}"
+
+# ===== 日志（网页动作层） =====
+log.action.load-fail: "[actions] {0}"
+log.action.parse-fail: "[actions] 动作解析失败: {0}"
+log.action.strict-rejected: "[actions] strict 模式已开启且配置存在 {0} 处错误，本次全部拒绝加载（沿用旧配置）。"
+log.action.loaded: "[actions] 已加载动作 {0} 个（跳过 {1} 处错误动作）"
+log.action.effect-failed: "[actions] 玩家 {0} 执行 {1} 效果失败: {2}"
+log.action.executed: "[actions] {0} 执行动作 {1}（{2}）: {3}"
+log.action.queue-fail: "离线任务入队失败: {0}"
+log.action.deliver-fail: "离线任务补发失败 ({0}): {1}"
+log.action.delivered: "已补发玩家 {0} 的离线任务 {1} 条"
+log.action.migrate-pending-empty: "[迁移] 礼包待补发记录 {0} 无可转换内容，保留原记录"
+log.action.migrate-task-fail: "[迁移] 离线任务写入失败: {0}"
+log.action.migrate-items-fail: "[迁移] 物品快照解析失败: {0}"
+log.action.migrate-commands-fail: "[迁移] 指令快照解析失败: {0}"
+log.action.migrate-claim-fail: "[迁移] 领取记录转换失败: {0}"
 
 # ===== 主页模块（启动/禁用/应用） =====
 mhp.apply-home: "已应用当前主页到 web.home: {0} -> {1}"
 mhp.disabled: "已在 config.yml 中禁用（enabled: false），跳过注册。"
 mhp.host-missing: "未找到 SOYSHTTPOverMC 宿主插件，跳过自定义主页注册"
-mhp.registered: "已注册自定义主页：主页位置 {0} 个（current={1}），API: /api/homepage/{config,live,gift/claim,gift/status}"
+mhp.migrated: "{0}"
+mhp.registered: "已注册自定义主页：主页位置 {0} 个（current={1}），API: /api/homepage/{config,live,action/list,action/execute,action/status}，网页动作 {2} 个"
 
-# ===== 礼包领取/状态 =====
-gift.config.no-config: "主页配置未加载"
-gift.claim.already-claimed: "你已经领取过礼包啦"
-gift.claim.disabled: "自定义主页功能未启用"
-gift.claim.no-config: "主页配置未加载"
-gift.claim.no-gift: "当前没有可领取的礼包"
-gift.claim.offline-queued: "领取成功，你当前不在游戏内，物品将在你上线后自动发放"
-gift.claim.out-of-window: "当前不在礼包领取时间范围内"
-gift.claim.success: "领取成功，礼包已发放到你的背包"
-gift.claim.unauthorized: "请先登录后再领取礼包"
-gift.status.disabled: "自定义主页功能未启用"
-gift.status.no-config: "主页配置未加载"
-gift.status.no-gift: "当前没有可领取的礼包"
-gift.status.unauthorized: "请先登录"
+# ===== 接口错误 =====
+homepage.config.no-config: "主页配置未加载"
 
-# ===== 异常 =====
-exception.gift.time-parse-fail: "无法解析时间字符串: {0}"
+# ===== 动作执行结果（玩家可见，经 /api/homepage/action/execute 返回前端） =====
+action.result.invalid-player: "玩家名为空"
+action.result.not-found: "动作不存在: {0}"
+action.result.invalid-args: "执行参数不完整"
+action.result.already-claimed: "你已经领取过啦，本周期内不可重复领取"
+action.result.out-of-window: "当前不在领取时间范围内"
+action.result.cooldown: "操作过于频繁，请 {0} 秒后再试"
+action.result.insufficient-funds: "余额不足，需要 {0}"
+action.result.unregistered-effect: "未注册效果类型: {0}"
+action.result.effect-executed: "{0}已执行"
+action.result.effect-queued: "{0}已入队（上线补发）"
+action.result.effect-rejected: "{0}被拒绝（需在线）"
+action.result.failed: "执行失败: {0}"
+action.result.need-online: "操作失败：该动作需要玩家在线才能完成"
+action.result.success-queued: "已立即生效；物品类奖励将在你上线后自动发放"
+action.result.success: "操作成功，已立即生效"
+
+# ===== 动作执行细节（效果标签） =====
+action.effect.label-command: "指令[{0}] "
+
+# ===== 动作效果执行异常（经 ActionResult 聚合展示） =====
+action.exec.invalid-economy-type: "不支持的经济效果类型: {0}"
+action.exec.invalid-amount: "economy.give 效果必须配置 amount（发放金额）"
+action.exec.need-online: "该动作需要玩家在线才能完成（离线策略为拒绝）"
+
+# ===== actions.yml 配置校验错误（经 actions validate / reload 展示给服主） =====
+action.validate.file-missing: "actions.yml 不存在（未释放模板？）"
+action.validate.no-actions-section: "actions.yml 缺少顶层 actions: 段"
+action.validate.id-invalid: "actions.{0}.id 不合法（仅小写字母/数字/下划线/连字符，1-32 位）"
+action.validate.empty: "actions.{0} 为空"
+action.validate.name-empty: "actions.{0}.name 为空"
+action.validate.price-negative: "actions.{0}.price 不能为负数"
+action.validate.offline-invalid: "actions.{0}.offline 非法值 \"{1}\"，可选: run / queue / reject"
+action.validate.cooldown-negative: "actions.{0}.cooldown-seconds 不能为负数"
+action.validate.claim-period-invalid: "actions.{0}.claim-period 非法值 \"{1}\"，可选: once / daily / weekly"
+action.validate.window-start-format: "actions.{0}.claim-window-start 格式应为 yyyy-MM-dd HH:mm:ss: \"{1}\""
+action.validate.window-end-format: "actions.{0}.claim-window-end 格式应为 yyyy-MM-dd HH:mm:ss: \"{1}\""
+action.validate.effects-empty: "actions.{0}.effects 为空（至少需要一个效果）"
+action.validate.sort-negative: "actions.{0}.display.sort 不能为负数"
+action.validate.effect-empty: "{0} 为空"
+action.validate.effect-type-empty: "{0}.type 为空"
+action.validate.effect-type-unknown: "{0}.type \"{1}\" 未注册（可用: command / economy.take / economy.give）"
+action.validate.effect-command-empty: "{0}.command 为空（type=command 时必须配置指令模板）"
+action.validate.effect-target-invalid: "{0}.target 非法值 \"{1}\"，可选: console / account / entity"
+action.validate.effect-amount-invalid: "{0}.amount 必须大于 0（economy.give 需要配置发放金额）"
+
+# ===== 配置初始化 =====
+config.init-fail: "无法初始化配置 {0}"
