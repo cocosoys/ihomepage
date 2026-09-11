@@ -50,23 +50,17 @@ log.action.executed: "[actions] {0} 执行动作 {1}（{2}）: {3}"
 log.action.queue-fail: "离线任务入队失败: {0}"
 log.action.deliver-fail: "离线任务补发失败 ({0}): {1}"
 log.action.delivered: "已补发玩家 {0} 的离线任务 {1} 条"
-log.action.migrate-pending-empty: "[迁移] 礼包待补发记录 {0} 无可转换内容，保留原记录"
-log.action.migrate-task-fail: "[迁移] 离线任务写入失败: {0}"
-log.action.migrate-items-fail: "[迁移] 物品快照解析失败: {0}"
-log.action.migrate-commands-fail: "[迁移] 指令快照解析失败: {0}"
-log.action.migrate-claim-fail: "[迁移] 领取记录转换失败: {0}"
 
 # ===== 主页模块（启动/禁用/应用） =====
 mhp.apply-home: "已应用当前主页到 web.home: {0} -> {1}"
 mhp.disabled: "已在 config.yml 中禁用（enabled: false），跳过注册。"
 mhp.host-missing: "未找到 SOYSHTTPOverMC 宿主插件，跳过自定义主页注册"
-mhp.migrated: "{0}"
-mhp.registered: "已注册自定义主页：主页位置 {0} 个（current={1}），API: /api/homepage/{config,live,action/list,action/execute,action/status}，网页动作 {2} 个"
+mhp.registered: "已注册自定义主页：主页位置 {0} 个（current={1}），API: /api/plugins/ihomepages/homepage/{config,live,action/list,action/execute,action/status}，网页动作 {2} 个"
 
 # ===== 接口错误 =====
 homepage.config.no-config: "主页配置未加载"
 
-# ===== 动作执行结果（玩家可见，经 /api/homepage/action/execute 返回前端） =====
+# ===== 动作执行结果（玩家可见，经 /api/plugins/ihomepages/homepage/action/execute 返回前端） =====
 action.result.invalid-player: "玩家名为空"
 action.result.not-found: "动作不存在: {0}"
 action.result.invalid-args: "执行参数不完整"

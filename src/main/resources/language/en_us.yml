@@ -51,23 +51,17 @@ log.action.executed: "[actions] {0} executed action {1} ({2}): {3}"
 log.action.queue-fail: "Failed to enqueue offline task: {0}"
 log.action.deliver-fail: "Failed to deliver offline task ({0}): {1}"
 log.action.delivered: "Delivered {1} offline task(s) for player {0}"
-log.action.migrate-pending-empty: "[migration] Gift pending record {0} has nothing to convert; kept as-is"
-log.action.migrate-task-fail: "[migration] Failed to write offline task: {0}"
-log.action.migrate-items-fail: "[migration] Failed to parse items snapshot: {0}"
-log.action.migrate-commands-fail: "[migration] Failed to parse commands snapshot: {0}"
-log.action.migrate-claim-fail: "[migration] Failed to convert claim record: {0}"
 
 # ===== Homepage module (enable/disable/apply) =====
 mhp.apply-home: "Applied current homepage to web.home: {0} -> {1}"
 mhp.disabled: "Disabled in config.yml (enabled: false), skipping registration."
 mhp.host-missing: "SOYSHTTPOverMC host plugin not found, skipping custom homepage registration"
-mhp.migrated: "{0}"
-mhp.registered: "Registered custom homepage: {0} location(s) (current={1}), API: /api/homepage/{config,live,action/list,action/execute,action/status}, web actions {2}"
+mhp.registered: "Registered custom homepage: {0} location(s) (current={1}), API: /api/plugins/ihomepages/homepage/{config,live,action/list,action/execute,action/status}, web actions {2}"
 
 # ===== API errors =====
 homepage.config.no-config: "Homepage configuration is not loaded"
 
-# ===== Action execution results (player-visible, returned by /api/homepage/action/execute) =====
+# ===== Action execution results (player-visible, returned by /api/plugins/ihomepages/homepage/action/execute) =====
 action.result.invalid-player: "Player name is empty"
 action.result.not-found: "Action not found: {0}"
 action.result.invalid-args: "Incomplete execution arguments"

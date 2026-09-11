@@ -24,7 +24,6 @@ import com.github.cocosoys.mc.ihomepages.homepage.HomepageState;
 import com.github.cocosoys.mc.ihomepages.command.HomepageSubCommand;
 import com.github.cocosoys.mc.ihomepages.spring.controller.HomeApiController;
 import com.github.cocosoys.mc.ihomepages.listener.ActionPendingListener;
-import com.github.cocosoys.mc.ihomepages.migration.GiftDataMigrator;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -47,7 +46,8 @@ import java.util.jar.JarFile;
  * <b>不持有/不存储网页字节内容</b>，也不把 HTML 塞进 {@code GET /} 路由。</p>
  *
  * <p>{@link #onEnable()}：读逻辑配置 → 读本插件 config.yml 的主页位置映射 →
- * 把当前主页位置应用到 web.home → 经宿主 API 门面注册 /soyshttp homepage 子指令、/api/homepage/* 接口与 reload 钩子。
+ * 把当前主页位置应用到 web.home → 经宿主 API 门面注册 /soyshttp homepage 子指令、
+ * /api/plugins/ihomepages/homepage/* 接口（宿主按注册规范自动附加插件命名空间前缀）与 reload 钩子。
  * 与 SOYSHTTPOverMC 的耦合收敛到：宿主实例 {@link HttpOverMcPlugin}（softdepend）+ API 门面 {@link SoysHttpOverMcApi}。</p>
  */
 @CustomLog
@@ -145,12 +145,6 @@ public final class MyHomePages extends JavaPlugin {
         ActionClaimStore claimStore = new ActionClaimStore();
         WebActionExecutor actionExecutor = new WebActionExecutor(this, actionManager, runner, taskQueue);
 
-        // 3.1.6) 礼包旧数据 → 动作链路一次性迁移（在补发监听注册前执行，迁移结果随日志输出）
-        String migrateMsg = new GiftDataMigrator(this, taskQueue, claimStore).migrate();
-        if (!migrateMsg.isEmpty()) {
-            log.infoT("mhp.migrated", migrateMsg);
-        }
-
         // 3.2) 注册 /soyshttp homepage 子指令（宿主 initCommand 之后再注入，命令方可生效）
         api.getExtension().registerSubCommand(
                 new HomepageSubCommand(host, apiFacade, actionManager, taskQueue));
@@ -181,7 +175,7 @@ public final class MyHomePages extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new ActionPendingListener(taskQueue), this);
 
         log.infoT("mhp.registered",
-                "已注册自定义主页：主页位置 {0} 个（current={1}），API: /api/homepage/{config,live,action/list,action/execute,action/status}，网页动作 {2} 个",
+                "已注册自定义主页：主页位置 {0} 个（current={1}），API: /api/plugins/ihomepages/homepage/{config,live,action/list,action/execute,action/status}，网页动作 {2} 个",
                 specs.size(), current, actionManager.all().size());
     }
 

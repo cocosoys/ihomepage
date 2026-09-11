@@ -3,7 +3,7 @@ package com.github.cocosoys.mc.ihomepages.spring.entity;
 import lombok.Data;
 
 /**
- * 实时数据实体（在线人数等），由 {@code GET /api/homepage/live} 返回给前端。
+ * 实时数据实体（在线人数等），由 {@code GET /api/plugins/ihomepages/homepage/live} 返回给前端。
  * 与 home.yml 内容分离，独立端点避免配置 JSON 不可缓存。
  */
 @Data

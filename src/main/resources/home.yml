@@ -42,5 +42,5 @@ ui:
   show-qq: true
   show-download: true
   show-intro: true
-  # 礼包按钮改为前端渲染 actions.yml 中的 claim-gift 动作（/api/homepage/action/list + /action/status）
+  # 礼包按钮改为前端渲染 actions.yml 中的 claim-gift 动作（/api/plugins/ihomepages/homepage/action/list + /action/status）
   show-gift: true

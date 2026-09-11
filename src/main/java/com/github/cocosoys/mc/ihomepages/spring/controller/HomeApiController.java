@@ -24,13 +24,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 自定义主页接口控制器（仿 Spring MVC 注解式）：
+ * 自定义主页接口控制器（仿 Spring MVC 注解式）。
+ *
+ * <p><b>地址前缀说明</b>：按宿主 1.4.0 API 注册规范，非主插件控制器经 {@code registerController} 注册时
+ * 自动获得 {@code /plugins/ihomepages} 命名空间前缀（位于全局 {@code /api} 前缀之后），故下列端点的
+ * <b>实际访问地址</b>均为 {@code /api/plugins/ihomepages/homepage/...}（注解内只写相对路径，不写前缀）：</p>
  * <ul>
- *   <li>{@code GET /api/homepage/config} —— 返回 home.yml 的「仅展示」安全 JSON（前端渲染用）；</li>
- *   <li>{@code GET /api/homepage/live} —— 返回实时数据（在线人数等，独立端点可缓存）；</li>
- *   <li>{@code GET /api/homepage/action/list} —— 网页动作列表（安全视图，不含命令模板，含领取型动作的展示信息）；</li>
- *   <li>{@code POST /api/homepage/action/execute} —— 执行网页动作（actions.yml 配置驱动：扣款/指令/离线分流/领取去重）；</li>
- *   <li>{@code GET /api/homepage/action/status} —— 查询本人待补发的离线任务数 + 各领取型动作的领取状态。</li>
+ *   <li>{@code GET /api/plugins/ihomepages/homepage/config} —— 返回 home.yml 的「仅展示」安全 JSON（前端渲染用）；</li>
+ *   <li>{@code GET /api/plugins/ihomepages/homepage/live} —— 返回实时数据（在线人数等，独立端点可缓存）；</li>
+ *   <li>{@code GET /api/plugins/ihomepages/homepage/action/list} —— 网页动作列表（安全视图，不含命令模板，含领取型动作的展示信息）；</li>
+ *   <li>{@code POST /api/plugins/ihomepages/homepage/action/execute} —— 执行网页动作（actions.yml 配置驱动：扣款/指令/离线分流/领取去重）；</li>
+ *   <li>{@code GET /api/plugins/ihomepages/homepage/action/status} —— 查询本人待补发的离线任务数 + 各领取型动作的领取状态。</li>
  * </ul>
  * config / live 标注 {@code @ApiPublic} 且已在 auth.yml exempt 中豁免，浏览器无需凭证即可访问；
  * action/* 需玩家会话凭证（在线/离线令牌均可，凭证解析出的玩家名即领取主体）。
