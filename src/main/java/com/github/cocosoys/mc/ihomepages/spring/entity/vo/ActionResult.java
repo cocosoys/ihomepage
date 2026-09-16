@@ -1,4 +1,4 @@
-package com.github.cocosoys.mc.ihomepages.action.model;
+package com.github.cocosoys.mc.ihomepages.spring.entity;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

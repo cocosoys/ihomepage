@@ -1,4 +1,6 @@
-package com.github.cocosoys.mc.ihomepages.action.model;
+package com.github.cocosoys.mc.ihomepages.spring.entity.po;
+
+import com.github.cocosoys.mc.ihomepages.spring.entity.WebAction;
 
 /**
  * 一次动作执行的环境上下文：由 {@code WebActionExecutor} 在执行前构建并传给效果执行器。

@@ -2,7 +2,7 @@ package com.github.cocosoys.mc.ihomepages.action.exec;
 
 import com.github.cocosoys.mc.soyshttpovermc.i18n.I18n;
 import com.github.cocosoys.mc.ihomepages.action.model.ActionContext;
-import com.github.cocosoys.mc.ihomepages.action.model.WebActionEffect;
+import com.github.cocosoys.mc.ihomepages.spring.entity.WebActionEffect;
 
 /**
  * 内置效果：{@code command} —— 执行服务器指令（经 CommandRunner 分类与离线分流）。

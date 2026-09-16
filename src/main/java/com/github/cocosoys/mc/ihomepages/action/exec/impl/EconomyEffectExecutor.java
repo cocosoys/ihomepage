@@ -2,7 +2,7 @@ package com.github.cocosoys.mc.ihomepages.action.exec;
 
 import com.github.cocosoys.mc.soyshttpovermc.i18n.I18n;
 import com.github.cocosoys.mc.ihomepages.action.model.ActionContext;
-import com.github.cocosoys.mc.ihomepages.action.model.WebActionEffect;
+import com.github.cocosoys.mc.ihomepages.spring.entity.WebActionEffect;
 
 /**
  * 内置效果：{@code economy.take} / {@code economy.give} —— 货币操作。
