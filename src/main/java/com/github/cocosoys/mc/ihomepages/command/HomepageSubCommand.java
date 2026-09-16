@@ -6,7 +6,7 @@ import com.github.cocosoys.mc.soyshttpovermc.HttpOverMcPlugin;
 import com.github.cocosoys.mc.soyshttpovermc.command.SubCommand;
 import com.github.cocosoys.mc.soyshttpovermc.i18n.I18n;
 import com.github.cocosoys.mc.ihomepages.action.WebActionManager;
-import com.github.cocosoys.mc.ihomepages.action.model.WebAction;
+import com.github.cocosoys.mc.ihomepages.spring.entity.WebAction;
 import com.github.cocosoys.mc.ihomepages.action.queue.OfflineTaskQueue;
 import com.github.cocosoys.mc.ihomepages.api.HomeApi;
 

@@ -1,4 +1,4 @@
-package com.github.cocosoys.mc.ihomepages.action.exec;
+package com.github.cocosoys.mc.ihomepages.enums;
 
 /**
  * 命令类别 —— 「网页命令及时执行」的第一性分类：

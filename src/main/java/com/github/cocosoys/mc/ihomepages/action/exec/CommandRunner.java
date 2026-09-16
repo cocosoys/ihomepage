@@ -1,10 +1,11 @@
 package com.github.cocosoys.mc.ihomepages.action.exec;
 
+import com.github.cocosoys.mc.ihomepages.enums.CommandClass;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.github.cocosoys.mc.ihomepages.action.model.ActionContext;
-import com.github.cocosoys.mc.ihomepages.action.model.OfflineTask;
+import com.github.cocosoys.mc.ihomepages.spring.entity.vo.ActionContext;
+import com.github.cocosoys.mc.ihomepages.spring.entity.OfflineTask;
 import com.github.cocosoys.mc.ihomepages.action.queue.OfflineTaskQueue;
 
 import java.util.UUID;
@@ -53,12 +54,12 @@ public class CommandRunner {
      * @param declaredClass   显式声明的类别（可为 null，自动分类）
      * @return 执行结局
      */
-    public RunMode run(String commandTemplate, ActionContext ctx, String offlineMode, CommandClass declaredClass) {
+    public RunMode run(String commandTemplate, ActionContext ctx, String offlineMode, com.github.cocosoys.mc.ihomepages.enums.CommandClass declaredClass) {
         if (commandTemplate == null || commandTemplate.trim().isEmpty()) {
             return RunMode.EXECUTED; // 空命令视为无操作成功
         }
         String cmd = fill(commandTemplate, ctx);
-        CommandClass clazz = declaredClass != null ? declaredClass : classifier.classify(commandTemplate);
+        com.github.cocosoys.mc.ihomepages.enums.CommandClass clazz = declaredClass != null ? declaredClass : classifier.classify(commandTemplate);
 
         // 在线：一律立即执行
         if (ctx.isOnline()) {
@@ -66,7 +67,7 @@ public class CommandRunner {
             return RunMode.EXECUTED;
         }
         // 离线 + CONSOLE/ACCOUNT：不依赖在线实体，立即执行
-        if (clazz == CommandClass.CONSOLE || clazz == CommandClass.ACCOUNT) {
+        if (clazz == com.github.cocosoys.mc.ihomepages.enums.CommandClass.CONSOLE || clazz == CommandClass.ACCOUNT) {
             runOnPrimaryThread(cmd);
             return RunMode.EXECUTED;
         }

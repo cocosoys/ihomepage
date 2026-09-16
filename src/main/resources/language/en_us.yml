@@ -43,9 +43,11 @@ log.homepage.register: "Recorded homepage location: {0} -> {1}"
 
 # ===== Logs (web action layer) =====
 log.action.load-fail: "[actions] {0}"
+log.action.store-read-fail: "[actions] Failed to read actions from storage: {0}"
+log.action.store-write-fail: "[actions] Failed to write action to storage: {0}"
 log.action.parse-fail: "[actions] Failed to parse action: {0}"
 log.action.strict-rejected: "[actions] strict mode is on and the config has {0} error(s); all actions rejected (keeping previous config)."
-log.action.loaded: "[actions] Loaded {0} action(s) (skipped {1} erroneous action(s))"
+log.action.loaded: "[actions] Loaded {0} action(s) (skipped {1} erroneous action(s), backend {2})"
 log.action.effect-failed: "[actions] Player {0} effect {1} failed: {2}"
 log.action.executed: "[actions] {0} executed action {1} ({2}): {3}"
 log.action.queue-fail: "Failed to enqueue offline task: {0}"

@@ -1,4 +1,4 @@
-package com.github.cocosoys.mc.ihomepages.action.model;
+package com.github.cocosoys.mc.ihomepages.spring.entity;
 
 import com.dlz.db.annotation.TableId;
 import com.dlz.db.annotation.TableName;

@@ -5,8 +5,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.github.cocosoys.mc.soyshttpovermc.orm.YAML;
-import com.github.cocosoys.mc.ihomepages.action.model.OfflineTask;
+import com.github.cocosoys.mc.soyshttpovermc.orm.DATA;
+import com.github.cocosoys.mc.ihomepages.spring.entity.OfflineTask;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,20 +35,20 @@ public class OfflineTaskQueue {
             return;
         }
         try {
-            YAML.Pojo.insert(task);
+            DATA.insert(task);
         } catch (RuntimeException e) {
             log.warnT("log.action.queue-fail", "离线任务入队失败: {0}", e.getMessage());
         }
     }
 
-    /** 查询玩家名下全部待补发任务（status=pending，按文件写入顺序；玩家名忽略大小写，防会话名与实际名不一致）。 */
+    /** 查询玩家名下全部待补发任务（status=pending，按存储顺序；玩家名忽略大小写，防会话名与实际名不一致）。 */
     public List<OfflineTask> pendingOf(String playerName) {
         List<OfflineTask> out = new ArrayList<>();
         if (playerName == null || playerName.isEmpty()) {
             return out;
         }
         try {
-            List<OfflineTask> list = YAML.Pojo.select(OfflineTask.class);
+            List<OfflineTask> list = DATA.select(OfflineTask.class);
             if (list != null) {
                 for (OfflineTask t : list) {
                     if (t.getPlayerName() != null
@@ -74,13 +74,13 @@ public class OfflineTaskQueue {
             return;
         }
         try {
-            OfflineTask t = YAML.Pojo.get(OfflineTask.class, id);
+            OfflineTask t = DATA.get(OfflineTask.class, id);
             if (t == null) {
                 return;
             }
             t.setStatus(status);
             t.setDoneAt(String.valueOf(System.currentTimeMillis()));
-            YAML.Pojo.updateById(t);
+            DATA.updateById(t);
         } catch (Throwable ignored) {
         }
     }

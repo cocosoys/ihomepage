@@ -1,4 +1,4 @@
-package com.github.cocosoys.mc.ihomepages.spring.entity.po;
+package com.github.cocosoys.mc.ihomepages.spring.entity.vo;
 
 import com.github.cocosoys.mc.ihomepages.spring.entity.WebAction;
 

@@ -1,7 +1,7 @@
 package com.github.cocosoys.mc.ihomepages.action.queue;
 
-import com.github.cocosoys.mc.soyshttpovermc.orm.YAML;
-import com.github.cocosoys.mc.ihomepages.action.model.ActionClaimRecord;
+import com.github.cocosoys.mc.soyshttpovermc.orm.DATA;
+import com.github.cocosoys.mc.ihomepages.spring.entity.ActionClaimRecord;
 
 import java.util.Calendar;
 import java.util.List;
@@ -21,7 +21,7 @@ public class ActionClaimStore {
             return null;
         }
         try {
-            List<ActionClaimRecord> list = YAML.Pojo.select(ActionClaimRecord.class);
+            List<ActionClaimRecord> list = DATA.select(ActionClaimRecord.class);
             if (list != null) {
                 ActionClaimRecord best = null;
                 for (ActionClaimRecord r : list) {
@@ -69,7 +69,7 @@ public class ActionClaimStore {
     /** 落一条领取记录（执行成功后调用）。 */
     public void record(String playerName, String actionId, String period) {
         try {
-            YAML.Pojo.insert(new ActionClaimRecord(
+            DATA.insert(new ActionClaimRecord(
                     UUID.randomUUID().toString(), playerName, actionId,
                     String.valueOf(System.currentTimeMillis()), period));
         } catch (RuntimeException e) {

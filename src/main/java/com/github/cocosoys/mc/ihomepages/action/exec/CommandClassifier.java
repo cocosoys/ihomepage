@@ -1,5 +1,7 @@
 package com.github.cocosoys.mc.ihomepages.action.exec;
 
+import com.github.cocosoys.mc.ihomepages.enums.CommandClass;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
@@ -47,19 +49,19 @@ public class CommandClassifier {
      * @param command 完整命令（可含参数，如 {@code give Steve diamond 5} / {@code lp user Steve parent add vip}）
      * @return 命令类别；无法识别时按 CONSOLE 处理（保守：不与玩家实体绑定）
      */
-    public CommandClass classify(String command) {
+    public com.github.cocosoys.mc.ihomepages.enums.CommandClass classify(String command) {
         if (command == null || command.trim().isEmpty()) {
-            return CommandClass.CONSOLE;
+            return com.github.cocosoys.mc.ihomepages.enums.CommandClass.CONSOLE;
         }
         String first = firstWord(command);
         if (first == null) {
-            return CommandClass.CONSOLE;
+            return com.github.cocosoys.mc.ihomepages.enums.CommandClass.CONSOLE;
         }
         if (entityPrefixes.contains(first)) {
-            return CommandClass.ENTITY;
+            return com.github.cocosoys.mc.ihomepages.enums.CommandClass.ENTITY;
         }
         if (accountPrefixes.contains(first)) {
-            return CommandClass.ACCOUNT;
+            return com.github.cocosoys.mc.ihomepages.enums.CommandClass.ACCOUNT;
         }
         return CommandClass.CONSOLE;
     }

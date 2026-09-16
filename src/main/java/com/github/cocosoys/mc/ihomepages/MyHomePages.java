@@ -17,7 +17,7 @@ import com.github.cocosoys.mc.ihomepages.action.queue.ActionClaimStore;
 import com.github.cocosoys.mc.ihomepages.action.queue.OfflineTaskQueue;
 import com.github.cocosoys.mc.ihomepages.config.IHomeConfigExporter;
 import com.github.cocosoys.mc.ihomepages.config.JsonHomeConfigExporter;
-import com.github.cocosoys.mc.ihomepages.config.MainConfigReader;
+import com.github.cocosoys.mc.ihomepages.spring.impl.MainConfigReader;
 import com.github.cocosoys.mc.ihomepages.config.YamlHomeConfigSource;
 import com.github.cocosoys.mc.ihomepages.homepage.HomepageRegistry;
 import com.github.cocosoys.mc.ihomepages.homepage.HomepageState;

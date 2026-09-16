@@ -1,7 +1,10 @@
 package com.github.cocosoys.mc.ihomepages.action.exec;
 
-import com.github.cocosoys.mc.ihomepages.action.model.ActionContext;
-import com.github.cocosoys.mc.ihomepages.action.model.WebActionEffect;
+import com.github.cocosoys.mc.ihomepages.action.exec.impl.CommandEffectExecutor;
+import com.github.cocosoys.mc.ihomepages.action.exec.impl.EconomyEffectExecutor;
+import com.github.cocosoys.mc.ihomepages.exception.ActionException;
+import com.github.cocosoys.mc.ihomepages.spring.entity.vo.ActionContext;
+import com.github.cocosoys.mc.ihomepages.spring.entity.WebActionEffect;
 
 /**
  * 效果执行器 SPI —— 动作效果类型的扩展点。
@@ -20,7 +23,7 @@ public interface EffectExecutor {
      * @param effect 效果定义（type/command/target/amount）
      * @param ctx    执行上下文
      * @return 执行结果：true=已立即执行；false=已离线入队（待补发）；抛异常=执行失败
-     * @throws ActionException 执行失败（含明确原因，供上层聚合与审计）
+     * @throws com.github.cocosoys.mc.ihomepages.exception.ActionException 执行失败（含明确原因，供上层聚合与审计）
      */
     boolean execute(WebActionEffect effect, ActionContext ctx) throws ActionException;
 }

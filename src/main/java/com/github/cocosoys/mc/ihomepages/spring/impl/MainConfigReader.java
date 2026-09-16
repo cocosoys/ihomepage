@@ -1,6 +1,7 @@
-package com.github.cocosoys.mc.ihomepages.config;
+package com.github.cocosoys.mc.ihomepages.spring.impl;
 
 
+import com.github.cocosoys.mc.ihomepages.config.AbstractConfigSource;
 import org.bukkit.plugin.java.JavaPlugin;
 import com.github.cocosoys.mc.ihomepages.spring.service.IConfigReader;
 

@@ -1,4 +1,4 @@
-package com.github.cocosoys.mc.ihomepages.spring.entity;
+package com.github.cocosoys.mc.ihomepages.spring.entity.vo;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

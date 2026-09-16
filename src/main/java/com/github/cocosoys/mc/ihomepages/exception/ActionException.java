@@ -1,4 +1,4 @@
-package com.github.cocosoys.mc.ihomepages.action.exec;
+package com.github.cocosoys.mc.ihomepages.exception;
 
 /**
  * 动作效果执行失败异常：携带面向玩家的明确原因，由 WebActionExecutor 聚合为 ActionResult。

@@ -1,7 +1,7 @@
 package com.github.cocosoys.mc.ihomepages.action.config;
 
 import com.github.cocosoys.mc.soyshttpovermc.i18n.I18n;
-import com.github.cocosoys.mc.ihomepages.action.exec.EconomyEffectExecutor;
+import com.github.cocosoys.mc.ihomepages.action.exec.impl.EconomyEffectExecutor;
 import com.github.cocosoys.mc.ihomepages.spring.entity.WebAction;
 import com.github.cocosoys.mc.ihomepages.spring.entity.WebActionEffect;
 

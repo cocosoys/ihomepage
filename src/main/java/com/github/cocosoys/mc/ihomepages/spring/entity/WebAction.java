@@ -1,4 +1,8 @@
-package com.github.cocosoys.mc.ihomepages.action.model;
+package com.github.cocosoys.mc.ihomepages.spring.entity;
+
+import com.dlz.db.annotation.TableField;
+import com.dlz.db.annotation.TableId;
+import com.dlz.db.annotation.TableName;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,12 +10,18 @@ import java.util.List;
 /**
  * 网页动作定义（对应 actions.yml 中 {@code actions.<id>} 的一项）。
  *
- * <p>由服主在配置文件声明，运行时由 {@code WebActionManager} 加载校验。
- * 执行语义：按 {@code effects} 列表顺序逐个执行效果（可编排「先扣款、再发物、再给权限」等）。</p>
+ * <p>ORM 实体：主表 {@code homepage_action}，由 {@code WebActionManager} 在启动/重载时将
+ * actions.yml（服主的简易添加方式）同步落库；运行期从数据库读取。效果列表存子表
+ * {@code homepage_action_effect}（{@link WebActionEffect#getActionId()} 关联），
+ * {@link #getEffects()} 由 Manager 加载后组装，不直接落库。</p>
+ *
+ * <p>执行语义：按 {@code effects} 列表顺序逐个执行效果（可编排「先扣款、再发物、再给权限」等）。</p>
  */
+@TableName("homepage_action")
 public class WebAction {
 
-    /** 动作 ID：唯一标识，前端按钮与代码调用均引用它（小写字母/数字/下划线/连字符，≤32）。 */
+    /** 动作 ID：唯一标识（主键），前端按钮与代码调用均引用它（小写字母/数字/下划线/连字符，≤32）。 */
+    @TableId
     private String id;
 
     /** 动作显示名（前端按钮/卡片标题）。 */
@@ -38,11 +48,30 @@ public class WebAction {
     /** 领取时间窗口结束（yyyy-MM-dd HH:mm:ss）；空 = 不限制。 */
     private String claimWindowEnd;
 
-    /** 效果列表（按顺序执行）。 */
+    /** 效果列表（按顺序执行；存子表 homepage_action_effect，由 Manager 组装，不直接落库）。 */
+    @TableField(exist = false)
     private List<WebActionEffect> effects = new ArrayList<>();
 
-    /** 前端展示配置（可选；无则自动隐藏展示属性）。 */
+    /** 前端展示配置（内存对象；落库时拆分为下方 display* 5 列）。 */
+    @TableField(exist = false)
     private DisplayConfig display;
+
+    // ===== display 拆列（ORM 落库字段；由 Manager 在读写时与 display 对象互转） =====
+
+    /** display.icon（拆列）。 */
+    private String displayIcon = "";
+
+    /** display.desc（拆列）。 */
+    private String displayDesc = "";
+
+    /** display.group（拆列）。 */
+    private String displayGroup = "";
+
+    /** display.sort（拆列）。 */
+    private int displaySort = 0;
+
+    /** display.hidden（拆列）。 */
+    private boolean displayHidden = false;
 
     public String getId() {
         return id;
@@ -140,6 +169,84 @@ public class WebAction {
     /** 是否在前端展示（display.hidden != true 且已配置 display 或默认可见）。 */
     public boolean isVisible() {
         return display == null || !display.isHidden();
+    }
+
+    // ===== display 拆列互转（ORM 读写时由 Manager 调用） =====
+
+    /** 用 display 对象填充拆列字段（写库前调用；display=null 时清为默认值）。 */
+    public void extractDisplayColumns() {
+        if (display == null) {
+            displayIcon = "";
+            displayDesc = "";
+            displayGroup = "";
+            displaySort = 0;
+            displayHidden = false;
+            return;
+        }
+        displayIcon = display.getIcon();
+        displayDesc = display.getDesc();
+        displayGroup = display.getGroup();
+        displaySort = display.getSort();
+        displayHidden = display.isHidden();
+    }
+
+    /** 用拆列字段组装 display 对象（读库后调用；5 列全默认视为未配置，返回 null）。 */
+    public void applyDisplayColumns() {
+        boolean blank = (displayIcon == null || displayIcon.isEmpty())
+                && (displayDesc == null || displayDesc.isEmpty())
+                && (displayGroup == null || displayGroup.isEmpty())
+                && displaySort == 0 && !displayHidden;
+        if (blank) {
+            display = null;
+            return;
+        }
+        DisplayConfig d = new DisplayConfig();
+        d.setIcon(displayIcon == null ? "" : displayIcon);
+        d.setDesc(displayDesc == null ? "" : displayDesc);
+        d.setGroup(displayGroup == null ? "" : displayGroup);
+        d.setSort(displaySort);
+        d.setHidden(displayHidden);
+        display = d;
+    }
+
+    public String getDisplayIcon() {
+        return displayIcon;
+    }
+
+    public void setDisplayIcon(String displayIcon) {
+        this.displayIcon = displayIcon;
+    }
+
+    public String getDisplayDesc() {
+        return displayDesc;
+    }
+
+    public void setDisplayDesc(String displayDesc) {
+        this.displayDesc = displayDesc;
+    }
+
+    public String getDisplayGroup() {
+        return displayGroup;
+    }
+
+    public void setDisplayGroup(String displayGroup) {
+        this.displayGroup = displayGroup;
+    }
+
+    public int getDisplaySort() {
+        return displaySort;
+    }
+
+    public void setDisplaySort(int displaySort) {
+        this.displaySort = displaySort;
+    }
+
+    public boolean isDisplayHidden() {
+        return displayHidden;
+    }
+
+    public void setDisplayHidden(boolean displayHidden) {
+        this.displayHidden = displayHidden;
     }
 
     /** 前端展示配置（可选字段；display.hidden=true 时仅代码调用，不出现在前端列表）。 */

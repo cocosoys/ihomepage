@@ -1,7 +1,11 @@
-package com.github.cocosoys.mc.ihomepages.action.exec;
+package com.github.cocosoys.mc.ihomepages.action.exec.impl;
 
+import com.github.cocosoys.mc.ihomepages.action.exec.CommandRunner;
+import com.github.cocosoys.mc.ihomepages.action.exec.EffectExecutor;
+import com.github.cocosoys.mc.ihomepages.enums.CommandClass;
+import com.github.cocosoys.mc.ihomepages.exception.ActionException;
 import com.github.cocosoys.mc.soyshttpovermc.i18n.I18n;
-import com.github.cocosoys.mc.ihomepages.action.model.ActionContext;
+import com.github.cocosoys.mc.ihomepages.spring.entity.vo.ActionContext;
 import com.github.cocosoys.mc.ihomepages.spring.entity.WebActionEffect;
 
 /**
@@ -23,8 +27,8 @@ public class CommandEffectExecutor implements EffectExecutor {
     }
 
     @Override
-    public boolean execute(WebActionEffect effect, ActionContext ctx) throws ActionException {
-        CommandClass declared = parseTarget(effect.getTarget());
+    public boolean execute(WebActionEffect effect, ActionContext ctx) throws com.github.cocosoys.mc.ihomepages.exception.ActionException {
+        com.github.cocosoys.mc.ihomepages.enums.CommandClass declared = parseTarget(effect.getTarget());
         CommandRunner.RunMode mode = runner.run(effect.getCommand(), ctx,
                 ctx.getAction().getOffline(), declared);
         switch (mode) {
@@ -40,16 +44,16 @@ public class CommandEffectExecutor implements EffectExecutor {
     }
 
     /** 解析 target 声明（console/account/entity；null/空 → 自动分类）。 */
-    private static CommandClass parseTarget(String target) {
+    private static com.github.cocosoys.mc.ihomepages.enums.CommandClass parseTarget(String target) {
         if (target == null || target.trim().isEmpty()) {
             return null;
         }
         String t = target.trim().toLowerCase();
         if ("console".equals(t)) {
-            return CommandClass.CONSOLE;
+            return com.github.cocosoys.mc.ihomepages.enums.CommandClass.CONSOLE;
         }
         if ("account".equals(t)) {
-            return CommandClass.ACCOUNT;
+            return com.github.cocosoys.mc.ihomepages.enums.CommandClass.ACCOUNT;
         }
         if ("entity".equals(t)) {
             return CommandClass.ENTITY;
