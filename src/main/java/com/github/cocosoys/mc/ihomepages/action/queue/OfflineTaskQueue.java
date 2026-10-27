@@ -16,7 +16,7 @@ import java.util.concurrent.CountDownLatch;
  * 离线任务队列服务：管理 {@code homepage_action_pending} 的入队、查询与上线补执行。
  *
  * <p>「及时性执行」的延迟通道：实体类命令在玩家离线时入队（命令快照已填充），
- * 玩家上线由 {@link #deliver(Player)} 逐条补执行并标记状态（一人可多条，UUID 主键互不覆盖）。</p>
+ * 玩家上线由 {@link #deliver(Player)} 逐条补执行并标记状态（一人可多条，自增数字主键互不覆盖）。</p>
  *
  * <p>日志经 i18n（key 见 language/*.yml，log.action.*）。</p>
  */
@@ -37,7 +37,7 @@ public class OfflineTaskQueue {
         try {
             DATA.insert(task);
         } catch (RuntimeException e) {
-            log.warnT("log.action.queue-fail", "离线任务入队失败: {0}", e.getMessage());
+            log.warnT("ihomepages.log.action.queue-fail", "离线任务入队失败: {0}", e.getMessage());
         }
     }
 
@@ -69,7 +69,7 @@ public class OfflineTaskQueue {
     }
 
     /** 更新任务状态并记录完成时间。 */
-    public void mark(String id, String status) {
+    public void mark(Long id, String status) {
         if (id == null) {
             return;
         }
@@ -110,12 +110,12 @@ public class OfflineTaskQueue {
                     delivered[0]++;
                 } catch (Throwable ex) {
                     mark(t.getId(), "failed");
-                    log.warnT("log.action.deliver-fail", "离线任务补发失败 ({0}): {1}",
+                    log.warnT("ihomepages.log.action.deliver-fail", "离线任务补发失败 ({0}): {1}",
                             t.getId(), ex.getMessage());
                 }
             }
             if (delivered[0] > 0) {
-                log.infoT("log.action.delivered", "已补发玩家 {0} 的离线任务 {1} 条",
+                log.infoT("ihomepages.log.action.delivered", "已补发玩家 {0} 的离线任务 {1} 条",
                         player.getName(), delivered[0]);
             }
         };

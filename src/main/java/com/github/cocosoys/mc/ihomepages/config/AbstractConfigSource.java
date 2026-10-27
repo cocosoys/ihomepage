@@ -41,7 +41,7 @@ public abstract class AbstractConfigSource {
                 }
             } catch (IOException e) {
                 throw new RuntimeException(
-                        I18n.t("config.init-fail", "无法初始化配置 {0}", dataRelative), e);
+                        I18n.t("ihomepages.config.init-fail", "无法初始化配置 {0}", dataRelative), e);
             }
         }
         return f;

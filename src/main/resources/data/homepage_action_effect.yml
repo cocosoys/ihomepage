@@ -1,0 +1,84 @@
+# ============================================================================
+# iHomePages · 网页动作效果子表（YAML 存储模式初始化模板）
+# 表: homepage_action_effect（= WebActionEffect 的 @TableName，与 SQL 表名一致）
+# ----------------------------------------------------------------------------
+# · 存储位置: <插件数据文件夹>/data/homepage_action_effect.yml
+#   （由宿主 AutoOps 从本 jar 的 data/ 目录复制，目标文件已存在时不覆盖）
+# · 根节点:   homepage_action_effect（键 = 效果记录主键，自增数字 1、2、3…）
+# · 主键:     @TableId(type = IdType.AUTO) —— SQL 端 AUTO_INCREMENT、YAML 端自动取
+#             最大数字键 +1；老版本 UUID 合成键由宿主 ORM 启动时自动重编号为 1..n。
+# · 字段:     action_id 关联主表 homepage_action.id；sort 为动作内执行顺序（0 起）；
+#             type = command / economy.take / economy.give；
+#             target = console / account / entity（type=command 时生效，可空）；
+#             amount = 金额（economy.give 必填；economy.take 缺省取动作 price）。
+# · 注意:     WebActionManager 以 actions.yml 为声明源全量重建效果（先删后插），
+#             自增主键由后端分配；本文件提供与 actions.yml 默认模板一致的初始数据。
+# ============================================================================
+homepage_action_effect:
+  1:
+    id: 1
+    action_id: daily-bonus
+    sort: 0
+    type: economy.take
+    amount: 0.0
+  2:
+    id: 2
+    action_id: daily-bonus
+    sort: 1
+    type: command
+    command: give {player} iron_ingot 10
+    target: entity
+    amount: 0.0
+  3:
+    id: 3
+    action_id: daily-bonus
+    sort: 2
+    type: command
+    command: lp user {player} parent add donor
+    target: account
+    amount: 0.0
+  4:
+    id: 4
+    action_id: unlock-vip
+    sort: 0
+    type: command
+    command: lp user {player} parent add vip
+    amount: 0.0
+  5:
+    id: 5
+    action_id: sell-wheat
+    sort: 0
+    type: command
+    command: clear {player} wheat
+    target: entity
+    amount: 0.0
+  6:
+    id: 6
+    action_id: sell-wheat
+    sort: 1
+    type: economy.give
+    amount: 5.0
+  7:
+    id: 7
+    action_id: claim-gift
+    sort: 0
+    type: command
+    command: give {player} DIAMOND 16
+    target: entity
+    amount: 0.0
+  8:
+    id: 8
+    action_id: claim-gift
+    sort: 1
+    type: command
+    command: give {player} IRON_INGOT 32
+    target: entity
+    amount: 0.0
+  9:
+    id: 9
+    action_id: claim-gift
+    sort: 2
+    type: command
+    command: say 欢迎新玩家 {player} 加入服务器！
+    target: console
+    amount: 0.0

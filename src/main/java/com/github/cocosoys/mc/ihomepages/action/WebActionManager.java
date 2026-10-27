@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * 网页动作管理器：加载/校验/缓存网页动作，支持热重载。
@@ -64,8 +63,8 @@ public class WebActionManager {
         File file = new File(plugin.getDataFolder(), "actions.yml");
         if (!file.isFile()) {
             lastErrors = Collections.singletonList(
-                    I18n.t("action.validate.file-missing", "actions.yml 不存在（未释放模板？）"));
-            log.warnT("log.action.load-fail", "[actions] {0}", lastErrors.get(0));
+                    I18n.t("ihomepages.action.validate.file-missing", "actions.yml 不存在（未释放模板？）"));
+            log.warnT("ihomepages.log.action.load-fail", "[actions] {0}", lastErrors.get(0));
             return;
         }
         YamlConfiguration y = YamlConfiguration.loadConfiguration(file);
@@ -76,8 +75,8 @@ public class WebActionManager {
         ConfigurationSection sec = y.getConfigurationSection("actions");
         if (sec == null) {
             lastErrors = Collections.singletonList(
-                    I18n.t("action.validate.no-actions-section", "actions.yml 缺少顶层 actions: 段"));
-            log.warnT("log.action.load-fail", "[actions] {0}", lastErrors.get(0));
+                    I18n.t("ihomepages.action.validate.no-actions-section", "actions.yml 缺少顶层 actions: 段"));
+            log.warnT("ihomepages.log.action.load-fail", "[actions] {0}", lastErrors.get(0));
             return;
         }
         for (String id : sec.getKeys(false)) {
@@ -90,14 +89,14 @@ public class WebActionManager {
             }
         }
         for (String e : errors) {
-            log.warnT("log.action.parse-fail", "[actions] 动作解析失败: {0}", e);
+            log.warnT("ihomepages.log.action.parse-fail", "[actions] 动作解析失败: {0}", e);
         }
 
         // strict 模式：任一错误 → 全部拒绝，沿用旧配置（不动存储）
         if (newStrict && !errors.isEmpty()) {
             lastErrors = errors;
             strict = newStrict;
-            log.warnT("log.action.strict-rejected",
+            log.warnT("ihomepages.log.action.strict-rejected",
                     "[actions] strict 模式已开启且配置存在 {0} 处错误，本次全部拒绝加载（沿用旧配置）。",
                     errors.size());
             return;
@@ -108,7 +107,7 @@ public class WebActionManager {
         syncStore(parsed);
         this.actions = loadFromStore();
         this.lastErrors = errors;
-        log.infoT("log.action.loaded", "[actions] 已加载动作 {0} 个（跳过 {1} 处错误动作，后端 {2}）",
+        log.infoT("ihomepages.log.action.loaded", "[actions] 已加载动作 {0} 个（跳过 {1} 处错误动作，后端 {2}）",
                 this.actions.size(), errors.size(), backendName());
     }
 
@@ -171,7 +170,7 @@ public class WebActionManager {
                 out.put(act.getId(), act);
             }
         } catch (Throwable t) {
-            log.warnT("log.action.store-read-fail", "[actions] 从存储读取动作失败: {0}", t);
+            log.warnT("ihomepages.log.action.store-read-fail", "[actions] 从存储读取动作失败: {0}", t);
         }
         return out;
     }
@@ -193,7 +192,7 @@ public class WebActionManager {
         act.extractDisplayColumns();
         boolean mainOk = storeUpsert(act);
         if (!mainOk) {
-            log.warnT("log.action.store-write-fail", "[actions] 动作 {0} 写入主表失败", act.getId());
+            log.warnT("ihomepages.log.action.store-write-fail", "[actions] 动作 {0} 写入主表失败", act.getId());
             return;
         }
         // 子表：删除该动作旧效果后按顺序重建
@@ -206,9 +205,7 @@ public class WebActionManager {
                     i++;
                     continue;
                 }
-                if (e.getId() == null) {
-                    e.setId(UUID.randomUUID().toString());
-                }
+                // 自增主键：id 留空由后端分配（SQL AUTO_INCREMENT / YAML 最大键+1），不再手工生成 UUID
                 e.setActionId(act.getId());
                 e.setSort(i);
                 storeUpsert(e);
@@ -223,7 +220,7 @@ public class WebActionManager {
         try {
             DATA.deleteById(WebAction.class, actionId);
         } catch (Throwable t) {
-            log.warnT("log.action.store-write-fail", "[actions] 删除动作 {0} 失败: {1}",
+            log.warnT("ihomepages.log.action.store-write-fail", "[actions] 删除动作 {0} 失败: {1}",
                     actionId, t.getMessage());
         }
     }
@@ -248,7 +245,7 @@ public class WebActionManager {
         try {
             return DATA.insert(bean);
         } catch (Throwable t) {
-            log.warnT("log.action.store-write-fail", "[actions] 动作存储写入失败: {0}",
+            log.warnT("ihomepages.log.action.store-write-fail", "[actions] 动作存储写入失败: {0}",
                     t.getMessage());
             return false;
         }

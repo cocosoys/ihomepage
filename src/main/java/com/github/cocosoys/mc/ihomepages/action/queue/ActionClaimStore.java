@@ -5,7 +5,6 @@ import com.github.cocosoys.mc.ihomepages.spring.entity.ActionClaimRecord;
 
 import java.util.Calendar;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * 领取型动作的去重存储：查询 / 判定 / 记录（落 {@code homepage_action_claim}）。
@@ -66,11 +65,11 @@ public class ActionClaimStore {
         return true; // once
     }
 
-    /** 落一条领取记录（执行成功后调用）。 */
+    /** 落一条领取记录（执行成功后调用）。自增主键：id 留空由后端分配。 */
     public void record(String playerName, String actionId, String period) {
         try {
             DATA.insert(new ActionClaimRecord(
-                    UUID.randomUUID().toString(), playerName, actionId,
+                    null, playerName, actionId,
                     String.valueOf(System.currentTimeMillis()), period));
         } catch (RuntimeException e) {
             // 记录失败不阻断业务（仅影响去重精度，冷却仍生效）

@@ -24,6 +24,7 @@ import com.github.cocosoys.mc.ihomepages.homepage.HomepageState;
 import com.github.cocosoys.mc.ihomepages.command.HomepageSubCommand;
 import com.github.cocosoys.mc.ihomepages.spring.controller.HomeApiController;
 import com.github.cocosoys.mc.ihomepages.listener.ActionPendingListener;
+import com.github.cocosoys.mc.ihomepages.expansion.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -32,6 +33,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -72,7 +74,7 @@ public final class MyHomePages extends JavaPlugin {
         // 宿主必须在运行时已加载（softdepend 通常保证先加载；此处在多个启动路径下兜底校验）
         HttpOverMcPlugin host = HttpOverMcPlugin.getInstance();
         if (host == null || Bukkit.getPluginManager().getPlugin("SOYSHTTPOverMC") == null) {
-            log.warnT("mhp.host-missing", "未找到 SOYSHTTPOverMC 宿主插件，跳过自定义主页注册");
+            log.warnT("ihomepages.mhp.host-missing", "未找到 SOYSHTTPOverMC 宿主插件，跳过自定义主页注册");
             return;
         }
         SoysHttpOverMcApi api = host.getApi();
@@ -82,7 +84,7 @@ public final class MyHomePages extends JavaPlugin {
         cfgReader.load();
         if (!cfgReader.isEnabled()) {
             homeApi = null;
-            log.infoT("mhp.disabled",
+            log.infoT("ihomepages.mhp.disabled",
                     "已在 config.yml 中禁用（enabled: false），跳过注册。");
             return;
         }
@@ -123,7 +125,7 @@ public final class MyHomePages extends JavaPlugin {
         extractResourceDir(this, "language", new File(getDataFolder(), "language"));
 
         // 3.0.1) 把本插件语言包注册为宿主 I18n 的额外语言源（合并进默认作用域：
-        //        log.infoT / msgT / I18n.t 的裸 key 即可命中，无需带前缀；与宿主 key 空间无冲突）
+        //        log.infoT / msgT / I18n.t 的 key 统一以 ihomepages. 为前缀，避免与宿主及其他插件键空间冲突）
         registerLanguageSource();
 
         // 3.1) 启动即把当前主页位置写入宿主 pages.yml 的 web.home 并应用（不触发全量 reload，仅应用运行中的 WebFrontendHandler）
@@ -132,7 +134,7 @@ public final class MyHomePages extends JavaPlugin {
             String value = resolveWebHomeSpec(curSpec);
             host.getDelegate().setWebHome(value);
             host.getWebFrontend().setHomeSpec(value);
-            log.infoT("mhp.apply-home", "已应用当前主页到 web.home: {0} -> {1}", current, value);
+            log.infoT("ihomepages.mhp.apply-home", "已应用当前主页到 web.home: {0} -> {1}", current, value);
         }
 
         // 3.1.5) 网页动作基础层（actions.yml 配置驱动）：管理器/分类器/队列/去重存储/执行门面
@@ -169,20 +171,41 @@ public final class MyHomePages extends JavaPlugin {
         IHomeConfigExporter exporter = new JsonHomeConfigExporter();
         HomeApiController controller = new HomeApiController(
                 home, exporter, actionManager, actionExecutor, taskQueue, claimStore, this);
-        api.getApiRegistration().registerController(controller, this);
+
+        // 4.0) SoysExpansion 改造（双 Expansion 方案 P）：
+        //   HomeExpansion —— 主页实例：托管 dist/ 到 /web/plugins/ihomepages/（挂根），
+        //     收编 HomeApiController 端点到 /api/plugins/ihomepages/...（替代原 registerController）。
+        //   ErpExpansion —— ERP 实例（McerpExpansion 子类）：ERP API/数据自包含，
+        //     前端资源根待指定（erpResourceRoot 占位），页面将来挂 /erp/ 子路径。
+        //   web.home 同步保留（下方 3.1 段已应用）：首页入口不变。
+        HomeExpansion homeExpansion = new HomeExpansion(controller);
+        if (!homeExpansion.register()) {
+            log.warnT("ihomepages.mhp.expansion-home-fail", "主页 Expansion 注册失败（identifier 冲突或数据层初始化失败）");
+        }
+
+        // ERP Expansion：控制器列表待 ERP 实现就位后传入；MCERP 未安装时
+        // McerpExpansion 父类缺失 → NoClassDefFoundError，捕获后跳过（主页不受影响）。
+        try {
+            ErpExpansion erpExpansion = new ErpExpansion(Collections.emptyList());
+            if (!erpExpansion.register()) {
+                log.warnT("ihomepages.mhp.expansion-erp-fail", "ERP Expansion 注册失败");
+            }
+        } catch (NoClassDefFoundError e) {
+            log.warnT("ihomepages.mhp.expansion-erp-skip", "MCERP 未安装，跳过 ERP Expansion: {0}", e.getMessage());
+        }
 
         // 4.1) 动作离线任务补发：玩家上线时主线程自动补发
         Bukkit.getPluginManager().registerEvents(new ActionPendingListener(taskQueue), this);
 
-        log.infoT("mhp.registered",
+        log.infoT("ihomepages.mhp.registered",
                 "已注册自定义主页：主页位置 {0} 个（current={1}），API: /api/plugins/ihomepages/homepage/{config,live,action/list,action/execute,action/status}，网页动作 {2} 个",
                 specs.size(), current, actionManager.all().size());
     }
 
     /**
      * 注册本插件语言包（zh_cn / en_us）为宿主 I18n 的额外语言源。
-     * <p>合并进宿主默认作用域后，{@code log.infoT / msgT / I18n.t} 的裸 key 即可查表，
-     * 未命中回退代码内模板。文件缺失（释放失败等）时跳过注册，不阻塞启动。</p>
+     * <p>合并进宿主默认作用域后，{@code log.infoT / msgT / I18n.t} 的 key 统一带
+     * {@code ihomepages.} 前缀即可查表，未命中回退代码内模板。文件缺失（释放失败等）时跳过注册，不阻塞启动。</p>
      */
     private void registerLanguageSource() {
         if (langRegistered) {
@@ -264,7 +287,7 @@ public final class MyHomePages extends JavaPlugin {
             jar = null;
         }
         if (jar == null || !jar.isFile()) {
-            log.warnT("log.homepage.extract-jar-missing",
+            log.warnT("ihomepages.log.homepage.extract-jar-missing",
                     "无法定位插件 jar，跳过 {0} 目录释放", resDir);
             return;
         }
@@ -290,10 +313,10 @@ public final class MyHomePages extends JavaPlugin {
                     Files.copy(in, out.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 }
             }
-            log.infoT("log.homepage.extracted",
+            log.infoT("ihomepages.log.homepage.extracted",
                     "已释放目录 {0} → {1}", resDir, outDir.getAbsolutePath());
         } catch (IOException ex) {
-            log.warnT("log.homepage.extract-fail",
+            log.warnT("ihomepages.log.homepage.extract-fail",
                     "释放目录 {0} 失败: {1}", resDir, ex.getMessage());
         }
     }

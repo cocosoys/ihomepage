@@ -46,7 +46,7 @@ public class EconomyEffectExecutor implements EffectExecutor {
         boolean give = "economy.give".equals(type);
         if (!take && !give) {
             throw new com.github.cocosoys.mc.ihomepages.exception.ActionException("invalid-type",
-                    I18n.t("action.exec.invalid-economy-type", "不支持的经济效果类型: {0}", type));
+                    I18n.t("ihomepages.action.exec.invalid-economy-type", "不支持的经济效果类型: {0}", type));
         }
 
         double amount;
@@ -57,7 +57,7 @@ public class EconomyEffectExecutor implements EffectExecutor {
             amount = effect.getAmount();
             if (amount <= 0) {
                 throw new ActionException("invalid-amount",
-                        I18n.t("action.exec.invalid-amount",
+                        I18n.t("ihomepages.action.exec.invalid-amount",
                                 "economy.give 效果必须配置 amount（发放金额）"));
             }
         }

@@ -1,0 +1,65 @@
+# ============================================================================
+# iHomePages · 网页动作主表（YAML 存储模式初始化模板）
+# 表: homepage_action（= WebAction 的 @TableName，与 SQL 表名一致）
+# ----------------------------------------------------------------------------
+# · 存储位置: <插件数据文件夹>/data/homepage_action.yml
+#   （由宿主 AutoOps 从本 jar 的 data/ 目录复制，目标文件已存在时不覆盖）
+# · 根节点:   homepage_action（键 = 动作 ID，与 actions.yml 中 actions.<id> 一致）
+# · 字段:     实体字段驼峰转小写下划线（cooldownSeconds → cooldown_seconds），
+#             与 SQL 端列名完全一致（双端同构）；display_* 为展示配置拆列；
+#             effects 存子表 homepage_action_effect，本文件不包含。
+# · 注意:     WebActionManager 以 actions.yml 为声明源全量同步落库（新增/修改
+#             upsert，yml 中移除的删除）。请以 actions.yml 为准维护动作；
+#             本文件仅在 actions.yml 缺失/为空时提供初始数据，与 actions.yml
+#             默认模板同源一致。
+# ============================================================================
+homepage_action:
+  daily-bonus:
+    id: daily-bonus
+    name: 每日礼包
+    price: 50.0
+    offline: queue
+    cooldown_seconds: 86400
+    balance_check: true
+    display_icon: 🎁
+    display_desc: 消耗 50 金币：10 铁锭 + 捐赠者权限（离线购买物品上线到账，权限立即生效）
+    display_group: 日常
+    display_sort: 1
+    display_hidden: false
+  unlock-vip:
+    id: unlock-vip
+    name: 解锁VIP
+    price: 500.0
+    offline: run
+    cooldown_seconds: 0
+    balance_check: false
+    display_icon: 👑
+    display_desc: 500 金币解锁 VIP 权限组，离线购买立即生效
+    display_group: 特权
+    display_sort: 2
+    display_hidden: false
+  sell-wheat:
+    id: sell-wheat
+    name: 出售小麦
+    price: 0.0
+    offline: reject
+    cooldown_seconds: 0
+    balance_check: false
+    display_icon: 🌾
+    display_desc: 出售背包中的小麦：每次 5 金币（需在线操作）
+    display_group: 商城
+    display_sort: 3
+    display_hidden: false
+  claim-gift:
+    id: claim-gift
+    name: 新人礼包
+    price: 0.0
+    offline: queue
+    cooldown_seconds: 0
+    balance_check: false
+    claim_period: once
+    display_icon: 🎁
+    display_desc: 新玩家专属礼包：16 钻石 + 32 铁锭（离线领取上线自动到账）
+    display_group: 新人
+    display_sort: 4
+    display_hidden: false

@@ -95,12 +95,12 @@ public class WebActionExecutor {
     public ActionResult execute(String actionId, String playerName, int amount) {
         if (playerName == null || playerName.trim().isEmpty()) {
             return ActionResult.reject("invalid-player",
-                    I18n.t("action.result.invalid-player", "玩家名为空"));
+                    I18n.t("ihomepages.action.result.invalid-player", "玩家名为空"));
         }
         WebAction action = manager.get(actionId);
         if (action == null) {
             return ActionResult.reject("not-found",
-                    I18n.t("action.result.not-found", "动作不存在: {0}", actionId));
+                    I18n.t("ihomepages.action.result.not-found", "动作不存在: {0}", actionId));
         }
         Player onlinePlayer = Bukkit.getPlayerExact(playerName);
         boolean online = onlinePlayer != null;
@@ -126,7 +126,7 @@ public class WebActionExecutor {
                 ActionClaimRecord rec = claimStore.findLatest(ctx.getPlayerName(), action.getId());
                 if (claimStore.isClaimed(rec, action.getClaimPeriod(), System.currentTimeMillis())) {
                     return ActionResult.reject("already-claimed",
-                            I18n.t("action.result.already-claimed", "你已经领取过啦，本周期内不可重复领取"));
+                            I18n.t("ihomepages.action.result.already-claimed", "你已经领取过啦，本周期内不可重复领取"));
                 }
                 ActionResult r = execute(action, ctx);
                 if (r.isSuccess()) {
@@ -143,17 +143,17 @@ public class WebActionExecutor {
     public ActionResult execute(WebAction action, ActionContext ctx) {
         if (action == null || ctx == null || ctx.getPlayerName() == null) {
             return ActionResult.reject("invalid-args",
-                    I18n.t("action.result.invalid-args", "执行参数不完整"));
+                    I18n.t("ihomepages.action.result.invalid-args", "执行参数不完整"));
         }
         // 0. 时间窗口校验（未配置窗口则放行）
         if (!inClaimWindow(action.getClaimWindowStart(), action.getClaimWindowEnd())) {
             return ActionResult.reject("out-of-window",
-                    I18n.t("action.result.out-of-window", "当前不在领取时间范围内"));
+                    I18n.t("ihomepages.action.result.out-of-window", "当前不在领取时间范围内"));
         }
         // 1. 冷却
         if (!passCooldown(action, ctx.getPlayerName())) {
             return ActionResult.reject("cooldown",
-                    I18n.t("action.result.cooldown", "操作过于频繁，请 {0} 秒后再试",
+                    I18n.t("ihomepages.action.result.cooldown", "操作过于频繁，请 {0} 秒后再试",
                             action.getCooldownSeconds()));
         }
         // 2. 计价 + 可选余额预检（Vault）
@@ -162,7 +162,7 @@ public class WebActionExecutor {
             double balance = VaultBridge.getBalance(ctx.getPlayerName());
             if (balance >= 0 && balance < totalPrice) {
                 return ActionResult.reject("insufficient-funds",
-                        I18n.t("action.result.insufficient-funds", "余额不足，需要 {0}", fmt(totalPrice)));
+                        I18n.t("ihomepages.action.result.insufficient-funds", "余额不足，需要 {0}", fmt(totalPrice)));
             }
         }
         // 3. 逐效果执行（按配置顺序：可编排「先扣款、再发物、再给权限」）
@@ -172,31 +172,31 @@ public class WebActionExecutor {
         for (WebActionEffect effect : action.getEffects()) {
             EffectExecutor executor = resolve(effect.getType());
             if (executor == null) {
-                details.add(I18n.t("action.result.unregistered-effect", "未注册效果类型: {0}",
+                details.add(I18n.t("ihomepages.action.result.unregistered-effect", "未注册效果类型: {0}",
                         effect.getType()));
                 continue;
             }
             try {
                 if (executor.execute(effect, ctx)) {
-                    details.add(label(effect) + I18n.t("action.result.effect-executed", "已执行"));
+                    details.add(label(effect) + I18n.t("ihomepages.action.result.effect-executed", "已执行"));
                 } else {
                     anyQueued = true;
-                    details.add(label(effect) + I18n.t("action.result.effect-queued", "已入队（上线补发）"));
+                    details.add(label(effect) + I18n.t("ihomepages.action.result.effect-queued", "已入队（上线补发）"));
                 }
             } catch (ActionException ex) {
                 if ("rejected-offline".equals(ex.getCode())) {
                     anyRejected = true;
-                    details.add(label(effect) + I18n.t("action.result.effect-rejected", "被拒绝（需在线）"));
+                    details.add(label(effect) + I18n.t("ihomepages.action.result.effect-rejected", "被拒绝（需在线）"));
                 } else {
-                    log.warnT("log.action.effect-failed", "[actions] 玩家 {0} 执行 {1} 效果失败: {2}",
+                    log.warnT("ihomepages.log.action.effect-failed", "[actions] 玩家 {0} 执行 {1} 效果失败: {2}",
                             ctx.getPlayerName(), action.getId(), ex.getMessage());
                     return ActionResult.reject(ex.getCode() == null ? "effect-failed" : ex.getCode(),
-                            I18n.t("action.result.failed", "执行失败: {0}", ex.getMessage()));
+                            I18n.t("ihomepages.action.result.failed", "执行失败: {0}", ex.getMessage()));
                 }
             }
         }
         // 4. 审计日志（冷却记录已在 passCooldown 写入）
-        log.infoT("log.action.executed", "[actions] {0} 执行动作 {1}（{2}）: {3}",
+        log.infoT("ihomepages.log.action.executed", "[actions] {0} 执行动作 {1}（{2}）: {3}",
                 ctx.getPlayerName(), action.getId(), ctx.isOnline() ? "在线" : "离线",
                 String.join("; ", details));
 
@@ -205,13 +205,13 @@ public class WebActionExecutor {
         String message;
         if (anyRejected && !anyQueued) {
             mode = "rejected";
-            message = I18n.t("action.result.need-online", "操作失败：该动作需要玩家在线才能完成");
+            message = I18n.t("ihomepages.action.result.need-online", "操作失败：该动作需要玩家在线才能完成");
         } else if (anyQueued) {
             mode = "queued";
-            message = I18n.t("action.result.success-queued", "已立即生效；物品类奖励将在你上线后自动发放");
+            message = I18n.t("ihomepages.action.result.success-queued", "已立即生效；物品类奖励将在你上线后自动发放");
         } else {
             mode = "executed";
-            message = I18n.t("action.result.success", "操作成功，已立即生效");
+            message = I18n.t("ihomepages.action.result.success", "操作成功，已立即生效");
         }
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("mode", mode);
@@ -230,7 +230,7 @@ public class WebActionExecutor {
     private static String label(WebActionEffect effect) {
         String t = effect.getType() == null ? "?" : effect.getType();
         if ("command".equals(t) && effect.getCommand() != null) {
-            return I18n.t("action.effect.label-command", "指令[{0}] ", effect.getCommand());
+            return I18n.t("ihomepages.action.effect.label-command", "指令[{0}] ", effect.getCommand());
         }
         return t + " ";
     }

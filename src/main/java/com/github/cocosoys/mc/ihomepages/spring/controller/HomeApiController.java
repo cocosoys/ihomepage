@@ -26,7 +26,7 @@ import java.util.Map;
 /**
  * 自定义主页接口控制器（仿 Spring MVC 注解式）。
  *
- * <p><b>地址前缀说明</b>：按宿主 1.4.0 API 注册规范，非主插件控制器经 {@code registerController} 注册时
+ * <p><b>地址前缀说明</b>：按宿主 1.4.1 API 注册规范，非主插件控制器经 {@code registerController} 注册时
  * 自动获得 {@code /plugins/ihomepages} 命名空间前缀（位于全局 {@code /api} 前缀之后），故下列端点的
  * <b>实际访问地址</b>均为 {@code /api/plugins/ihomepages/homepage/...}（注解内只写相对路径，不写前缀）：</p>
  * <ul>
@@ -69,7 +69,7 @@ public class HomeApiController {
     public AjaxResult config() {
         HomeConfigEntity hc = home.get();
         if (hc == null) {
-            return AjaxResult.errorT(500, "homepage.config.no-config", "主页配置未加载");
+            return AjaxResult.errorT(500, "ihomepages.homepage.config.no-config", "主页配置未加载");
         }
         return AjaxResult.success(exporter.export(hc));
     }

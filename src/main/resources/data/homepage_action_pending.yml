@@ -1,0 +1,14 @@
+# ============================================================================
+# iHomePages · 离线待执行任务表（YAML 存储模式初始化模板）
+# 表: homepage_action_pending（= OfflineTask 的 @TableName，与 SQL 表名一致）
+# ----------------------------------------------------------------------------
+# · 存储位置: <插件数据文件夹>/data/homepage_action_pending.yml
+#   （由宿主 AutoOps 从本 jar 的 data/ 目录复制，目标文件已存在时不覆盖）
+# · 根节点:   homepage_action_pending（键 = 任务主键，自增数字 1、2、3…，支持一人多条；
+#             @TableId(type = IdType.AUTO) —— SQL 端 AUTO_INCREMENT、YAML 端自动取最大数字键 +1）
+# · 字段:     player_name 为补发匹配键；command = 入队时已填充占位符的命令快照；
+#             status = pending（待补发）/ granted（已补发）/ failed（补发失败）。
+# · 注意:     本表为「运行期数据表」——仅当玩家离线且动作 offline=queue 时写入，
+#             玩家上线后由 OfflineTaskQueue 补执行；初始应为空（不提供种子数据）。
+# ============================================================================
+homepage_action_pending:

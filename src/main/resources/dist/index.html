@@ -148,26 +148,26 @@
 		<div class="row">
 			<div class="col-md-3">
 				<div class="fact-item">
-					<h3 class="counter">30</h3>
-					<p>Unique Classes</p>
+					<h3 class="counter" id="fact-online">-</h3>
+					<p>当前在线</p>
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="fact-item">
-					<h3 class="counter">153</h3>
-					<p>Epic Bosses</p>
+					<h3 class="counter" id="fact-max">-</h3>
+					<p>最大玩家数</p>
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="fact-item">
-					<h3 class="counter">21</h3>
-					<p>Castles</p>
+					<h3 class="counter" id="fact-pending">0</h3>
+					<p>待补发任务</p>
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="fact-item">
-					<h3 class="counter">946</h3>
-					<p>Happy Gamers</p>
+					<h3 class="counter" id="fact-player">-</h3>
+					<p>当前身份</p>
 				</div>
 			</div>
 		</div>
@@ -238,58 +238,12 @@
 <section class="pricing-area bg-black ptb--100" id="price">
 	<div class="container">
 		<div class="gm-title">
-			<span>Our</span>
-			<h2>Pricing Plan</h2>
+			<span>Actions</span>
+			<h2 id="actions-title">网页动作</h2>
+			<p id="actions-hint">登录后可领取礼包 / 执行网页动作</p>
 		</div>
-		<div class="row">
-			<div class="col-lg-4 col-md-6">
-				<div class="prc-single">
-					<h2>Basic</h2>
-					<strong>
-						<sup>$</sup>33
-						<sub>/ Mon</sub>
-					</strong>
-					<ul class="prc-list">
-						<li>100mb Disk Space</li>
-						<li>2 Subdomains</li>
-						<li>5 Email Accounts</li>
-						<li>Webmail Support</li>
-					</ul>
-					<a href="#">purchase</a>
-				</div>
-			</div>
-			<div class="col-lg-4 col-md-6">
-				<div class="prc-single">
-					<h2>Standard</h2>
-					<strong>
-						<sup>$</sup>66
-						<sub>/ Mon</sub>
-					</strong>
-					<ul class="prc-list">
-						<li>500mb Disk Space</li>
-						<li>10 Subdomains</li>
-						<li>20 Email Accounts</li>
-						<li>Webmail Support</li>
-					</ul>
-					<a class="active" href="#">purchase</a>
-				</div>
-			</div>
-			<div class="col-lg-4 col-md-6">
-				<div class="prc-single">
-					<h2>Premium</h2>
-					<strong>
-						<sup>$</sup>99
-						<sub>/ Mon</sub>
-					</strong>
-					<ul class="prc-list">
-						<li>1000mb Disk Space</li>
-						<li>50 Subdomains</li>
-						<li>100 Email Accounts</li>
-						<li>Webmail Support</li>
-					</ul>
-					<a href="#">purchase</a>
-				</div>
-			</div>
+		<div class="row" id="action-list">
+			<div class="col-12 text-center" style="color:#888;padding:20px;">加载中…</div>
 		</div>
 	</div>
 </section>
@@ -304,18 +258,15 @@
 		<div class="row">
 			<div class="col-md-10 offset-md-1">
 				<div class="contact-form-area">
-					<form action="#">
+					<form id="login-form" action="#">
 						<div class="row">
 							<div class="col-md-6">
-								<input type="text" placeholder="用户名...">
-<!--								<input type="email" placeholder="密码...">-->
-<!--								<input type="text" placeholder="Subject...">-->
-								<input type="text" placeholder="验证码">
+								<input type="text" id="login-player" placeholder="游戏用户名...">
+								<span id="login-msg" style="color:#e8a0a0;font-size:13px;display:block;margin-top:6px;"></span>
 							</div>
 							<div class="col-md-6">
-								<input type="email" placeholder="密码...">
-								<input type="submit" id="submit" value="注册/登录">
-<!--								<textarea name="msg" id="msg" placeholder="Message"></textarea>-->
+								<input type="password" id="login-password" placeholder="游戏密码（AuthMe）...">
+								<input type="submit" id="submit" value="登录 / 领取">
 							</div>
 						</div>
 					</form>
@@ -360,6 +311,163 @@
 <!-- google map -->
 <!---<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBO_5h890WNShs_YLGivCBfs2U89qXR-7Y&callback=initMap"></script>--->
 <script src="assets/js/scripts.js"></script>
+<!-- ihomepages 主页接线：live 实时数据 / 动作列表 / 登录 / 领取执行 -->
+<script>
+(function () {
+	"use strict";
+	var API = "/api/plugins/ihomepages/homepage";
+	var AUTH = "/api/auth";
+
+	function ajax(method, url, data) {
+		return $.ajax({
+			method: method,
+			url: url,
+			data: data ? (typeof data === "string" ? data : $.param(data)) : undefined,
+			contentType: "application/x-www-form-urlencoded",
+			xhrFields: { withCredentials: true }
+		});
+	}
+
+	// 实时数据（在线人数等，免凭证）
+	function loadLive() {
+		ajax("GET", API + "/live").done(function (res) {
+			if (res && res.code === 200 && res.data) {
+				$("#fact-online").text(res.data.online != null ? res.data.online : "-");
+				$("#fact-max").text(res.data.max != null ? res.data.max : "-");
+			}
+		}).fail(function () { /* live 不可达时保持占位 */ });
+	}
+
+	// 动作状态（pending 数 / 当前身份 / 领取标记）
+	function loadStatus() {
+		ajax("GET", API + "/action/status").done(function (res) {
+			if (res && res.code === 200 && res.data) {
+				$("#fact-pending").text(res.data.pending || 0);
+				$("#fact-player").text(res.data.player || "-");
+				markClaims(res.data.claims || []);
+			}
+		}).fail(function (xhr) {
+			// 未登录：清空身份与领取态
+			$("#fact-pending").text("0");
+			$("#fact-player").text("未登录");
+			if (xhr.status === 401) renderLoginHint();
+		});
+	}
+
+	// 根据 status 返回的 claims 标记动作卡片按钮
+	function markClaims(claims) {
+		var map = {};
+		claims.forEach(function (c) { map[c.action] = c; });
+		$("#action-list .prc-single").each(function () {
+			var id = $(this).attr("data-action");
+			var c = map[id];
+			var $btn = $(this).find("a.btn-act");
+			if (c && c.claimed) {
+				$btn.text("已领取").addClass("disabled").attr("disabled", true);
+			} else {
+				$btn.text("领取 / 购买").removeClass("disabled").attr("disabled", false);
+			}
+		});
+	}
+
+	function renderLoginHint() {
+		$("#actions-hint").text("登录后可领取礼包 / 执行网页动作");
+	}
+
+	// 动作列表渲染
+	function loadActions() {
+		ajax("GET", API + "/action/list").done(function (res) {
+			if (!res || res.code !== 200 || !res.data || !res.data.length) {
+				$("#action-list").html('<div class="col-12 text-center" style="color:#888;padding:20px;">暂无可领取动作</div>');
+				return;
+			}
+			var html = "";
+			res.data.forEach(function (a) {
+				var price = a.price > 0 ? ("$" + a.price) : "免费";
+				var desc = (a.display && a.display.desc) ? a.display.desc : "";
+				var cool = a.cooldownSeconds ? ("冷却 " + a.cooldownSeconds + "s") : "";
+				html += '<div class="col-lg-4 col-md-6">'
+					+ '<div class="prc-single" data-action="' + a.id + '">'
+					+ '<h2>' + (a.display && a.display.icon ? a.display.icon + " " : "") + esc(a.name) + '</h2>'
+					+ '<strong><sup>$</sup>' + price.replace("$","") + '<sub>' + (a.price > 0 ? "/ 次" : "") + '</sub></strong>'
+					+ '<ul class="prc-list"><li>' + esc(desc || a.id) + '</li>'
+					+ (cool ? '<li>' + cool + '</li>' : '')
+					+ '</ul>'
+					+ '<a href="javascript:void(0)" class="btn-act" data-act="' + a.id + '">领取 / 购买</a>'
+					+ '</div></div>';
+			});
+			$("#action-list").html(html);
+		}).fail(function (xhr) {
+			if (xhr.status === 401) {
+				$("#action-list").html('<div class="col-12 text-center" style="color:#888;padding:20px;">请先在下方登录后查看可领取动作</div>');
+			} else {
+				$("#action-list").html('<div class="col-12 text-center" style="color:#e8a0a0;padding:20px;">动作列表加载失败</div>');
+			}
+		});
+	}
+
+	function esc(s) {
+		return $("<div>").text(s == null ? "" : String(s)).html();
+	}
+
+	// 执行动作（事件委托）
+	$(document).on("click", ".btn-act", function () {
+		var $btn = $(this);
+		var act = $btn.attr("data-act");
+		if ($btn.hasClass("disabled")) return;
+		$btn.text("处理中…").addClass("disabled");
+		ajax("POST", API + "/action/execute", { action: act, amount: 1 }).done(function (res) {
+			if (res && res.code === 200) {
+				alert(res.msg || "操作成功");
+			} else {
+				alert((res && res.msg) || "操作失败");
+			}
+			loadStatus();
+			loadLive();
+		}).fail(function (xhr) {
+			var msg = "请求失败";
+			try { var r = JSON.parse(xhr.responseText); if (r.msg) msg = r.msg; } catch (e) {}
+			alert(msg);
+			loadStatus();
+		});
+	});
+
+	// 登录表单
+	$("#login-form").on("submit", function (e) {
+		e.preventDefault();
+		var player = $("#login-player").val().trim();
+		var password = $("#login-password").val();
+		var $msg = $("#login-msg");
+		if (!player || !password) { $msg.text("请输入用户名和密码"); return; }
+		$msg.text("登录中…");
+		$.ajax({
+			method: "POST",
+			url: AUTH + "/login",
+			data: JSON.stringify({ player: player, password: password }),
+			contentType: "application/json",
+			xhrFields: { withCredentials: true }
+		}).done(function (res) {
+			if (res && (res.code === 200 || res.success)) {
+				$msg.css("color", "#8fdc8f").text("登录成功");
+				loadActions();
+				loadStatus();
+			} else {
+				$msg.css("color", "#e8a0a0").text((res && res.msg) || "登录失败");
+			}
+		}).fail(function (xhr) {
+			var msg = "登录失败";
+			try { var r = JSON.parse(xhr.responseText); if (r.msg) msg = r.msg; } catch (e) {}
+			$msg.css("color", "#e8a0a0").text(msg);
+		});
+	});
+
+	// 初始化
+	loadLive();
+	loadActions();
+	loadStatus();
+	setInterval(loadLive, 15000);
+})();
+</script>
 </body>
 
 </html>

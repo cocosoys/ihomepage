@@ -38,7 +38,7 @@ public class CommandEffectExecutor implements EffectExecutor {
                 return false; // 已入队，待上线补执行
             default:
                 throw new ActionException("rejected-offline",
-                        I18n.t("action.exec.need-online",
+                        I18n.t("ihomepages.action.exec.need-online",
                                 "该动作需要玩家在线才能完成（离线策略为拒绝）"));
         }
     }

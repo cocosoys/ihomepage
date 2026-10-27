@@ -1,0 +1,15 @@
+# ============================================================================
+# iHomePages · 领取记录表（YAML 存储模式初始化模板）
+# 表: homepage_action_claim（= ActionClaimRecord 的 @TableName，与 SQL 表名一致）
+# ----------------------------------------------------------------------------
+# · 存储位置: <插件数据文件夹>/data/homepage_action_claim.yml
+#   （由宿主 AutoOps 从本 jar 的 data/ 目录复制，目标文件已存在时不覆盖）
+# · 根节点:   homepage_action_claim（键 = 记录主键，自增数字 1、2、3…；
+#             @TableId(type = IdType.AUTO) —— SQL 端 AUTO_INCREMENT、YAML 端自动取最大数字键 +1）
+# · 字段:     player_name + action_id 为去重查询键；claimed_at = 领取时刻
+#             （epoch 毫秒字符串）；period = once / daily / weekly。
+# · 注意:     本表为「运行期数据表」——仅当动作配置 claim-period 且玩家成功
+#             领取时写入，初始应为空（不提供种子数据）。空表无需种子：
+#             文件仅作为表结构占位，由 YAML 后端懒生成读取。
+# ============================================================================
+homepage_action_claim:

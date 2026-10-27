@@ -1,5 +1,6 @@
 package com.github.cocosoys.mc.ihomepages.spring.entity;
 
+import com.dlz.db.annotation.IdType;
 import com.dlz.db.annotation.TableId;
 import com.dlz.db.annotation.TableName;
 
@@ -9,15 +10,15 @@ import com.dlz.db.annotation.TableName;
  * <p>当动作的某个命令效果属「实体类」（如 give）且玩家离线、动作 offline 策略为 {@code queue} 时，
  * 写入本队列；玩家上线（PlayerJoinEvent）后由 {@code OfflineTaskQueue.deliver} 逐条按命令快照补执行。</p>
  *
- * <p>主键为 UUID，同一玩家可同时持有多条任务（多个动作 / 多次领取），互不覆盖；
+ * <p>主键为数据库自增数字，同一玩家可同时持有多条任务（多个动作 / 多次领取），互不覆盖；
  * 命令快照独立于 actions.yml，后续服主改配置不影响已入队任务。</p>
  */
 @TableName("homepage_action_pending")
 public class OfflineTask {
 
-    /** 主键：UUID，每条任务全局唯一（支持一人多条）。 */
-    @TableId
-    private String id;
+    /** 主键：数据库自增（SQL 端 AUTO_INCREMENT / YAML 端自动取最大键 +1），数字形式 1、2、3…（支持一人多条）。 */
+    @TableId(type = IdType.AUTO)
+    private Long id;
 
     /** 任务归属玩家名（补发按此查询）。 */
     private String playerName;
@@ -43,7 +44,7 @@ public class OfflineTask {
     public OfflineTask() {
     }
 
-    public OfflineTask(String id, String playerName, String playerUuid, String actionId,
+    public OfflineTask(Long id, String playerName, String playerUuid, String actionId,
                        String command, String queuedAt, String doneAt, String status) {
         this.id = id;
         this.playerName = playerName;
@@ -55,11 +56,11 @@ public class OfflineTask {
         this.status = status;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

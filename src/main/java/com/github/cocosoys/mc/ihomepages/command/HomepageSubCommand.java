@@ -54,13 +54,13 @@ public class HomepageSubCommand extends SubCommand {
 
     @Override
     public String usage() {
-        return I18n.t("command.homepage.usage",
+        return I18n.t("ihomepages.command.homepage.usage",
                 "/soyshttp homepage <list|set <name>|info|reload|actions ...> —— 首页与网页动作管理");
     }
 
     @Override
     public String detail() {
-        return I18n.t("command.homepage.detail",
+        return I18n.t("ihomepages.command.homepage.detail",
                 "首页列表查看与切换管理 + 网页动作运维\n" +
                 "  /soyshttp homepage list              —— 列出所有已记录的主页位置\n" +
                 "  /soyshttp homepage set <名称>       —— 切换到指定主页（写 homepage.current + 同步 web.home + reload）\n" +
@@ -80,12 +80,12 @@ public class HomepageSubCommand extends SubCommand {
     @Override
     public void execute(CommandSender sender, String label, String[] args) {
         if (args.length < 2) {
-            msgT(sender, "command.homepage.usage-short", "用法: /{0} {1}", label, usage());
+            msgT(sender, "ihomepages.command.homepage.usage-short", "用法: /{0} {1}", label, usage());
             return;
         }
 
         if (homeApi == null) {
-            msgT(sender, "command.homepage.uninit", "§c首页模块尚未初始化。");
+            msgT(sender, "ihomepages.command.homepage.uninit", "§c首页模块尚未初始化。");
             return;
         }
 
@@ -95,30 +95,30 @@ public class HomepageSubCommand extends SubCommand {
             case "list": {
                 List<String> names = homeApi.list();
                 if (names.isEmpty()) {
-                    msgT(sender, "command.homepage.none", "§e当前没有已记录的主页。");
+                    msgT(sender, "ihomepages.command.homepage.none", "§e当前没有已记录的主页。");
                 } else {
-                    msgT(sender, "command.homepage.list-title", "§a已记录主页列表:");
+                    msgT(sender, "ihomepages.command.homepage.list-title", "§a已记录主页列表:");
                     String current = homeApi.getCurrent();
                     for (String n : names) {
                         boolean isCurrent = n.equals(current);
                         String marker = isCurrent
-                                ? I18n.t("command.homepage.current-marker", " §b← 当前")
+                                ? I18n.t("ihomepages.command.homepage.current-marker", " §b← 当前")
                                 : "";
-                        msgT(sender, "command.homepage.item", "  §7- §f{0}{1}", n, marker);
+                        msgT(sender, "ihomepages.command.homepage.item", "  §7- §f{0}{1}", n, marker);
                     }
                 }
                 break;
             }
             case "set": {
                 if (args.length < 3) {
-                    msgT(sender, "command.homepage.set-usage", "§c用法: /{0} homepage set <首页名称>", label);
+                    msgT(sender, "ihomepages.command.homepage.set-usage", "§c用法: /{0} homepage set <首页名称>", label);
                     return;
                 }
                 String target = args[2];
                 if (homeApi.switchTo(target)) {
-                    msgT(sender, "command.homepage.switched", "§a已切换到主页: §f{0}§a（已同步 web.home 并 reload）", target);
+                    msgT(sender, "ihomepages.command.homepage.switched", "§a已切换到主页: §f{0}§a（已同步 web.home 并 reload）", target);
                 } else {
-                    msgT(sender, "command.homepage.not-found",
+                    msgT(sender, "ihomepages.command.homepage.not-found",
                             "§c未找到名为 '{0}' 的主页。可用 '/{1} homepage list' 查看所有已记录的主页。",
                             target, label);
                 }
@@ -127,16 +127,16 @@ public class HomepageSubCommand extends SubCommand {
             case "info": {
                 String cur = homeApi.getCurrent();
                 if (cur == null) {
-                    msgT(sender, "command.homepage.no-current", "§e当前未设置主页。");
+                    msgT(sender, "ihomepages.command.homepage.no-current", "§e当前未设置主页。");
                 } else {
-                    msgT(sender, "command.homepage.current", "§a当前主页: §f{0}", cur);
+                    msgT(sender, "ihomepages.command.homepage.current", "§a当前主页: §f{0}", cur);
                 }
                 break;
             }
             case "reload": {
                 // 按 homepage.current 重新应用 web.home（不切换）；等价于 /soyshttp reload 中对本模块的钩子动作
                 plugin.getDelegate().reloadHttpConfig();
-                msgT(sender, "command.homepage.reloaded", "§a已按当前主页重新应用 web.home。");
+                msgT(sender, "ihomepages.command.homepage.reloaded", "§a已按当前主页重新应用 web.home。");
                 break;
             }
             case "actions": {
@@ -144,7 +144,7 @@ public class HomepageSubCommand extends SubCommand {
                 break;
             }
             default: {
-                msgT(sender, "command.homepage.unknown",
+                msgT(sender, "ihomepages.command.homepage.unknown",
                         "§c未知子指令: {0}。可用: list / set <name> / info / reload / actions ...", sub);
             }
         }
@@ -153,20 +153,20 @@ public class HomepageSubCommand extends SubCommand {
     /** actions 运维命令组：list / validate / reload / queue <玩家> / flush <玩家>。 */
     private void handleActions(CommandSender sender, String label, String[] args) {
         if (actionManager == null) {
-            msgT(sender, "command.homepage.uninit", "§c网页动作模块尚未初始化。");
+            msgT(sender, "ihomepages.command.homepage.uninit", "§c网页动作模块尚未初始化。");
             return;
         }
         String sub = args.length < 3 ? "" : args[2].toLowerCase();
         switch (sub) {
             case "list": {
                 if (actionManager.all().isEmpty()) {
-                    msgT(sender, "command.homepage.actions-empty", "§e当前没有已加载的网页动作（检查 actions.yml 配置）。");
+                    msgT(sender, "ihomepages.command.homepage.actions-empty", "§e当前没有已加载的网页动作（检查 actions.yml 配置）。");
                     return;
                 }
-                msgT(sender, "command.homepage.actions-title", "§a已加载网页动作 (" + actionManager.all().size() + "):");
+                msgT(sender, "ihomepages.command.homepage.actions-title", "§a已加载网页动作 (" + actionManager.all().size() + "):");
                 for (WebAction a : actionManager.all().values()) {
                     String vis = a.isVisible() ? "" : " §7[隐藏]";
-                    msgT(sender, "command.homepage.actions-item",
+                    msgT(sender, "ihomepages.command.homepage.actions-item",
                             "  §7- §f{0} §7价格:§f{1} §7离线:§f{2}§7{3}",
                             a.getId(), fmtPrice(a.getPrice()), a.getOffline(), vis);
                 }
@@ -175,20 +175,20 @@ public class HomepageSubCommand extends SubCommand {
             case "validate": {
                 List<String> errors = actionManager.lastErrors();
                 if (errors.isEmpty()) {
-                    msgT(sender, "command.homepage.actions-valid",
+                    msgT(sender, "ihomepages.command.homepage.actions-valid",
                             "§aactions.yml 校验通过，已加载 {0} 个动作。", actionManager.all().size());
                 } else {
-                    msgT(sender, "command.homepage.actions-errors-title",
+                    msgT(sender, "ihomepages.command.homepage.actions-errors-title",
                             "§cactions.yml 存在 {0} 处错误:", errors.size());
                     for (String e : errors) {
-                        msgT(sender, "command.homepage.actions-error", "  §c- {0}", e);
+                        msgT(sender, "ihomepages.command.homepage.actions-error", "  §c- {0}", e);
                     }
                 }
                 break;
             }
             case "reload": {
                 actionManager.reload();
-                msgT(sender, "command.homepage.actions-reloaded",
+                msgT(sender, "ihomepages.command.homepage.actions-reloaded",
                         "§a已热重载 actions.yml（当前 {0} 个动作，{1} 处错误；已入队任务不受影响）。",
                         actionManager.all().size(), actionManager.lastErrors().size());
                 break;
@@ -196,18 +196,18 @@ public class HomepageSubCommand extends SubCommand {
             case "queue": {
                 String player = args.length < 4 ? null : args[3];
                 if (player == null || player.isEmpty()) {
-                    msgT(sender, "command.homepage.actions-queue-usage", "§c用法: /{0} homepage actions queue <玩家名>", label);
+                    msgT(sender, "ihomepages.command.homepage.actions-queue-usage", "§c用法: /{0} homepage actions queue <玩家名>", label);
                     return;
                 }
                 int pending = taskQueue == null ? 0 : taskQueue.pendingCount(player);
-                msgT(sender, "command.homepage.actions-queue-result",
+                msgT(sender, "ihomepages.command.homepage.actions-queue-result",
                         "§a玩家 {0} 当前有 {1} 条待补发的离线任务。", player, pending);
                 break;
             }
             case "flush": {
                 String player = args.length < 4 ? null : args[3];
                 if (player == null || player.isEmpty()) {
-                    msgT(sender, "command.homepage.actions-flush-usage", "§c用法: /{0} homepage actions flush <玩家名>", label);
+                    msgT(sender, "ihomepages.command.homepage.actions-flush-usage", "§c用法: /{0} homepage actions flush <玩家名>", label);
                     return;
                 }
                 int n = 0;
@@ -216,16 +216,16 @@ public class HomepageSubCommand extends SubCommand {
                     n = taskQueue.deliver(p);
                 }
                 if (p == null) {
-                    msgT(sender, "command.homepage.actions-flush-offline",
+                    msgT(sender, "ihomepages.command.homepage.actions-flush-offline",
                             "§e玩家 {0} 不在线，无法补发（上线时将自动补发）。", player);
                 } else {
-                    msgT(sender, "command.homepage.actions-flush-result",
+                    msgT(sender, "ihomepages.command.homepage.actions-flush-result",
                             "§a已补发玩家 {0} 的离线任务 {1} 条。", player, n);
                 }
                 break;
             }
             default: {
-                msgT(sender, "command.homepage.actions-usage",
+                msgT(sender, "ihomepages.command.homepage.actions-usage",
                         "§c用法: /{0} homepage actions <list|validate|reload|queue <玩家>|flush <玩家>>", label);
             }
         }

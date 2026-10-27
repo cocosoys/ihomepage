@@ -1,5 +1,6 @@
 package com.github.cocosoys.mc.ihomepages.spring.entity;
 
+import com.dlz.db.annotation.IdType;
 import com.dlz.db.annotation.TableId;
 import com.dlz.db.annotation.TableName;
 
@@ -12,9 +13,9 @@ import com.dlz.db.annotation.TableName;
 @TableName("homepage_action_claim")
 public class ActionClaimRecord {
 
-    /** 主键：UUID，每条领取记录全局唯一。 */
-    @TableId
-    private String id;
+    /** 主键：数据库自增（SQL 端 AUTO_INCREMENT / YAML 端自动取最大键 +1），数字形式 1、2、3… */
+    @TableId(type = IdType.AUTO)
+    private Long id;
 
     /** 领取主体：玩家名（去重查询键之一）。 */
     private String playerName;
@@ -31,7 +32,7 @@ public class ActionClaimRecord {
     public ActionClaimRecord() {
     }
 
-    public ActionClaimRecord(String id, String playerName, String actionId, String claimedAt, String period) {
+    public ActionClaimRecord(Long id, String playerName, String actionId, String claimedAt, String period) {
         this.id = id;
         this.playerName = playerName;
         this.actionId = actionId;
@@ -39,11 +40,11 @@ public class ActionClaimRecord {
         this.period = period;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

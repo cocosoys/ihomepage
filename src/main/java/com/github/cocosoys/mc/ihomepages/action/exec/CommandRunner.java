@@ -8,7 +8,6 @@ import com.github.cocosoys.mc.ihomepages.spring.entity.vo.ActionContext;
 import com.github.cocosoys.mc.ihomepages.spring.entity.OfflineTask;
 import com.github.cocosoys.mc.ihomepages.action.queue.OfflineTaskQueue;
 
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -80,9 +79,9 @@ public class CommandRunner {
         if ("reject".equals(mode)) {
             return RunMode.REJECTED;
         }
-        // queue（默认）：入队，上线补执行
+        // queue（默认）：入队，上线补执行（自增主键：id 留空由后端分配）
         taskQueue.enqueue(new OfflineTask(
-                UUID.randomUUID().toString(),
+                null,
                 ctx.getPlayerName(),
                 ctx.getPlayerUuid(),
                 ctx.getAction().getId(),

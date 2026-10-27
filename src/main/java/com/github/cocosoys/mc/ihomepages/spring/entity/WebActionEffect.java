@@ -1,5 +1,6 @@
 package com.github.cocosoys.mc.ihomepages.spring.entity;
 
+import com.dlz.db.annotation.IdType;
 import com.dlz.db.annotation.TableId;
 import com.dlz.db.annotation.TableName;
 
@@ -21,9 +22,9 @@ import com.dlz.db.annotation.TableName;
 @TableName("homepage_action_effect")
 public class WebActionEffect {
 
-    /** 主键：UUID，每条效果记录全局唯一。 */
-    @TableId
-    private String id;
+    /** 主键：数据库自增（SQL 端 AUTO_INCREMENT / YAML 端自动取最大键 +1），数字形式 1、2、3… */
+    @TableId(type = IdType.AUTO)
+    private Long id;
 
     /** 所属动作 ID（关联主表 homepage_action.id）。 */
     private String actionId;
@@ -46,17 +47,17 @@ public class WebActionEffect {
     public WebActionEffect() {
     }
 
-    public WebActionEffect(String id, String actionId, int sort) {
+    public WebActionEffect(Long id, String actionId, int sort) {
         this.id = id;
         this.actionId = actionId;
         this.sort = sort;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

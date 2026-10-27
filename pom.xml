@@ -121,7 +121,7 @@
         <dependency>
             <groupId>com.github.cocosoys.mc</groupId>
             <artifactId>soyshttpovermc-core</artifactId>
-            <version>1.4.0</version>
+            <version>1.4.1</version>
             <scope>provided</scope>
         </dependency>
         <!-- Lombok：编译期注解处理（@CustomLog 等），provided -->
@@ -129,6 +129,17 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.36</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- MCERP（ERP 生态插件）：ErpExpansion 继承 McerpExpansion 需要其类。provided：
+             运行时由 MCERP 插件提供（softdepend，测试服已装 MCERP-1.0-SNAPSHOT.jar）；
+             不得 shade 进本 jar —— 否则两个 ClassLoader 各有一份 McerpExpansion，
+             跨 ClassLoader 传给 ErpRegistry.registerModule 会类型不兼容。
+             构建本模块前须先 mvn install MCERP 到本地仓库。 -->
+        <dependency>
+            <groupId>com.github.cocosoys.mc</groupId>
+            <artifactId>MCERP</artifactId>
+            <version>1.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
