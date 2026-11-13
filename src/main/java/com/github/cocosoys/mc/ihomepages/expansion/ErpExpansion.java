@@ -1,5 +1,7 @@
 package com.github.cocosoys.mc.ihomepages.expansion;
 
+import com.github.cocosoys.mc.ihomepages.spring.controller.ErpConfigController;
+import com.github.cocosoys.mc.ihomepages.spring.controller.ErpHomepageController;
 import com.github.cocosoys.mc.ihomepages.spring.controller.HomeApiController;
 import com.github.cocosoys.mc.ihomepages.spring.entity.WebAction;
 import com.github.cocosoys.mc.ihomepages.spring.entity.WebActionEffect;
@@ -24,8 +26,10 @@ import java.util.Set;
  *   <li><b>ERP 数据自包含</b>：{@link #dataRoots()}={@code {"data"}} + {@link #sqlRoots()}={@code {"sql"}}
  *       → 宿主 AutoOps 复制 jar 内 {@code data/} 4 张实体表初始化 yml 并（MySQL 方言下）
  *       执行 {@code sql/init.sql}；{@link #seedData()} 提供默认动作种子（表空才插入，幂等）；</li>
- *   <li><b>ERP 前端单独实现</b>：{@link #erpResourceRoot()} 待用户指定前端后填入
- *       （如 {@code "erp-dist"}）；返回 null → 页面托管空操作，模块/API/数据照常注册；</li>
+ *   <li><b>ERP 前端单独实现</b>：{@link #erpResourceRoot()} = {@code "erp-dist"}
+ *       （由 {@code web/} 的 Vue2 工程构建产物复制而来），挂 {@code /erp} 子路径；
+ *       因 {@code HomeExpansion.spaFallback()=false} 只能走 hash 路由，故采用
+ *       {@link #wujie()} = false 的 IFRAME 模式；</li>
  *   <li><b>ERP 模块登记</b>：onRegister → 默认实现登记到 MCERP {@code ErpRegistry}
  *       （菜单入口 {@link #homeUrl()} = {@code /web/plugins/ihomepages/erp/}，hash 模式；
  *       MCERP 未安装/未就绪时静默跳过，不阻断）。</li>
@@ -72,21 +76,107 @@ public class ErpExpansion extends McerpExpansion {
         return 10;
     }
 
-    /** ERP 菜单入口：/web/plugins/ihomepages/erp/（hash 模式，刷新不 404）。 */
+    /**
+     * 模块访问权限：与 {@code plugin.yml} 的 {@code ihomepages.erp} 对应。
+     * {@code MenuRouteServiceImpl.moduleRoute} 会先按此节点过滤整个一级模块。
+     */
     @Override
-    protected String homeUrl() {
+    protected String permission() {
+        return "ihomepages.erp";
+    }
+
+    /**
+     * 采用 <b>IFRAME</b> 而非默认的 wujie。原因（经核对 MCERP 主应用 WujieLink 组件实现）：
+     * <ul>
+     *   <li>wujie 把 {@code meta.link} 整个当子应用入口 URL，并把
+     *       {@code /web/plugins/<名>} 之后的部分作为 {@code props.path} / bus
+     *       {@code router-push} 推给子应用。带 {@code #/...} 的 hash 会被算成
+     *       {@code /erp/#/ihomepageserp/config/config} 这种非法 path；</li>
+     *   <li>不带 hash 的深层 URL 又要求 SPA 回退，而 {@code HomeExpansion.spaFallback()=false}
+     *       （手写多页 HTML 不能被吞成 index.html），且该规则按 owner 插件名唯一，
+     *       两个 Expansion 无法各设一份；</li>
+     *   <li>IFRAME 直接把完整 hash URL 作为 iframe src，服务器只收到 {@code /erp/}
+     *       并命中 index.html，由子应用 vue-router 自己解析 hash，链路最短。</li>
+     * </ul>
+     * 前端已相应把「嵌入态」识别扩展为 wujie 或 iframe（router/permission.js），
+     * 使主应用统一鉴权、子应用不再走自身登录守卫。
+     */
+    @Override
+    protected boolean wujie() {
+        return false;
+    }
+
+    /**
+     * 页面 URL 前缀 = <b>owner 插件名</b>的命名空间（{@code /web/plugins/ihomepages}），
+     * 而非 identifier。父类默认用 identifier（{@code ihomepages-erp}）会指向
+     * {@code /web/plugins/ihomepages-erp} —— 该命名空间从未托管任何资源，菜单必然白屏。
+     * 服务器可改 page 前缀，故经 toolkit 求值（与 GiftLoft 参考实现一致）。
+     */
+    @Override
+    public String pageRoot() {
         SoysHttpOverMcApi a = getApi();
         Plugin o = getOwner();
         String base = (a == null || o == null) ? "/web/plugins/ihomepages"
                 : a.getToolkit().pageFullPrefix(o);
-        return base + "/erp/";
+        return base == null || base.isEmpty() ? "/web/plugins/ihomepages" : base;
     }
 
+    /** ERP 前端入口（沿用既有 {@code /erp} 子路径方案）。 */
+    private String erpPageRoot() {
+        return pageRoot() + "/erp/";
+    }
+
+    /** ERP 菜单入口：/web/plugins/ihomepages/erp/（hash 模式，刷新不 404）。 */
+    @Override
+    protected String homeUrl() {
+        return erpPageRoot();
+    }
+
+    /**
+     * 菜单叶子页面地址。
+     *
+     * <p>父模块路由 path 由 {@code MenuRouteServiceImpl.moduleRoute} 合成为
+     * {@code "/" + safeName(identifier)} = {@code /ihomepageserp}；子应用 SPA 的
+     * moduleRoot 必须与之同源，否则 {@code router/menuAdapter.js} 裁不出子树 → 白屏。
+     * 因 {@link HomeExpansion#spaFallback()} 为 false（手写多页 HTML 不能吞深层 404），
+     * ERP 子应用只能走 <b>hash 路由</b>：服务器只收到 {@code /erp/} 命中 index.html，
+     * {@code #/...} 由前端 vue-router 解析。</p>
+     */
+    private String erpPage(String route) {
+        return erpPageRoot() + "#/ihomepageserp/" + route;
+    }
+
+    /**
+     * 菜单树（修正了旧实现的两个结构性错误）：
+     * <ol>
+     *   <li>旧代码 {@code .dir("erp","ERP 控制台","erp")} 是<b>无 lambda</b> 重载，
+     *       会压栈且不弹栈 → 后续 {@code menu} 全部嵌进这个多余目录，且模块自身已被
+     *       MCERP 渲染成一级节点，等于多套了一层；</li>
+     *   <li>{@code .menu(id, name, "erp/homepage", Controller.class)} 第三个位置参数是
+     *       <b>icon</b> 不是 path/component，页面地址被写成了图标字符串。</li>
+     * </ol>
+     *
+     * <p>现在：根级 M 目录「插件配置」下两片叶子（config.yml / home.yml）。
+     * {@code componentFullURL} 不加任何前缀，直接指向 {@code /erp} 子路径下的 hash 路由；
+     * {@code @ApiPermission} 端点由 {@code ControllerPermScanner} 自动投影为 F 按钮
+     * （仅挂在 config 叶子，两个叶子共用同一组端点，重复挂会产生重复 menuId）。</p>
+     *
+     * <p><b>「主页管理」暂不挂菜单</b>：{@link ErpHomepageController} 的
+     * {@code /homepage/list|get|save|remove|preview} 端点已注册且可直连，但前端尚无对应
+     * 视图与路由绑定。后端菜单一旦下发而前端 {@code moduleRoutes} 缺绑定，
+     * {@code menuAdapter.buildMenuTree} 会直接抛错（点开必然白屏）——与 GiftLoft 参考实现
+     * 「玩家查询端点已注册、前端无页面故不挂菜单」的处理一致。等前端补页面后加回即可。</p>
+     */
     @Override
     protected ErpMenus menus() {
         return ErpMenus.create()
-                .dir("erp", "ERP 控制台", "erp");
-        // 待 ERP 控制器就位后按实际菜单补全（.menu/perm 叶子）
+                .dir("config", "插件配置", "edit", d -> d
+                        .menu("config", "核心配置", "input", ErpConfigController.class)
+                            .componentFullURL(erpPage("config/config"))
+                            .orderNum(10)
+                        .menu("home", "首页内容", "documentation")
+                            .componentFullURL(erpPage("config/home"))
+                            .orderNum(20));
     }
 
     // ===== ERP API（决策 A：自包含）=====
@@ -183,11 +273,15 @@ public class ErpExpansion extends McerpExpansion {
     // ===== ERP 前端（待用户指定）=====
 
     /**
-     * ERP 前端资源根：待用户指定前端后填入（如 {@code "erp-dist"}）。
-     * 返回 null → 页面托管空操作（模块/API/数据照常注册）。
+     * ERP 前端资源根：{@code web/} 的 {@code npm run build:prod} 产物复制到
+     * {@code src/main/resources/erp-dist/} 后随 jar 发布。
+     *
+     * <p>磁盘 {@code plugins/ihomepages/erp-dist/} 若存在则优先（便于运营热替换），
+     * 否则 {@link #registerPages()} 回退到 jar 内资源目录。返回 null 会导致页面托管空操作
+     * —— 曾是本模块 ERP 菜单点开 404 的根因。</p>
      */
     protected String erpResourceRoot() {
-        return null;
+        return "erp-dist";
     }
 
     /** 挂 /erp/ 子路径（方案 P）；不调 super.registerPages()（防规则互覆）。 */

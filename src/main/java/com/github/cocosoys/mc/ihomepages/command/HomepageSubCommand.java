@@ -9,6 +9,7 @@ import com.github.cocosoys.mc.ihomepages.action.WebActionManager;
 import com.github.cocosoys.mc.ihomepages.spring.entity.WebAction;
 import com.github.cocosoys.mc.ihomepages.action.queue.OfflineTaskQueue;
 import com.github.cocosoys.mc.ihomepages.api.HomeApi;
+import com.github.cocosoys.mc.ihomepages.config.HomepagesConfigReloader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +22,7 @@ import java.util.List;
  *   /soyshttp homepage set &lt;名称&gt;     —— 切换到指定主页（写 homepage.current + 同步 web.home + reload）
  *   /soyshttp homepage info            —— 显示当前主页名称
  *   /soyshttp homepage reload          —— 重新应用当前主页（按 homepage.current 刷新 web.home，不切换）
+ *   /soyshttp homepage config reload   —— 热重载 ERP「插件配置」保存后的 config.yml / home.yml
  *   /soyshttp homepage actions list    —— 列出全部网页动作（id / name / price / offline / 状态）
  *   /soyshttp homepage actions validate—— 全量校验 actions.yml 并输出每个动作的通过/错误明细
  *   /soyshttp homepage actions reload  —— 热重载 actions.yml（不重启，不丢已入队任务）
@@ -33,13 +35,16 @@ public class HomepageSubCommand extends SubCommand {
     private final HomeApi homeApi;
     private final WebActionManager actionManager;
     private final OfflineTaskQueue taskQueue;
+    private final HomepagesConfigReloader configReloader;
 
     public HomepageSubCommand(HttpOverMcPlugin plugin, HomeApi homeApi,
-                              WebActionManager actionManager, OfflineTaskQueue taskQueue) {
+                              WebActionManager actionManager, OfflineTaskQueue taskQueue,
+                              HomepagesConfigReloader configReloader) {
         super(plugin);
         this.homeApi = homeApi;
         this.actionManager = actionManager;
         this.taskQueue = taskQueue;
+        this.configReloader = configReloader;
     }
 
     @Override
@@ -55,7 +60,7 @@ public class HomepageSubCommand extends SubCommand {
     @Override
     public String usage() {
         return I18n.t("ihomepages.command.homepage.usage",
-                "/soyshttp homepage <list|set <name>|info|reload|actions ...> —— 首页与网页动作管理");
+                "/soyshttp homepage <list|set <name>|info|reload|config reload|actions ...> —— 首页、配置与网页动作管理");
     }
 
     @Override
@@ -66,6 +71,7 @@ public class HomepageSubCommand extends SubCommand {
                 "  /soyshttp homepage set <名称>       —— 切换到指定主页（写 homepage.current + 同步 web.home + reload）\n" +
                 "  /soyshttp homepage info              —— 显示当前主页名称\n" +
                 "  /soyshttp homepage reload            —— 重新应用当前主页（按 homepage.current 刷新 web.home，不切换）\n" +
+                "  /soyshttp homepage config reload     —— 热重载 config.yml / home.yml（ERP 插件配置保存后执行）\n" +
                 "  /soyshttp homepage actions list      —— 列出全部网页动作\n" +
                 "  /soyshttp homepage actions validate  —— 校验 actions.yml 配置\n" +
                 "  /soyshttp homepage actions reload    —— 热重载 actions.yml\n" +
@@ -139,14 +145,44 @@ public class HomepageSubCommand extends SubCommand {
                 msgT(sender, "ihomepages.command.homepage.reloaded", "§a已按当前主页重新应用 web.home。");
                 break;
             }
+            case "config": {
+                handleConfig(sender, label, args);
+                break;
+            }
             case "actions": {
                 handleActions(sender, label, args);
                 break;
             }
             default: {
                 msgT(sender, "ihomepages.command.homepage.unknown",
-                        "§c未知子指令: {0}。可用: list / set <name> / info / reload / actions ...", sub);
+                        "§c未知子指令: {0}。可用: list / set <name> / info / reload / config reload / actions ...", sub);
             }
+        }
+    }
+
+    /**
+     * config 命令组：ERP「插件配置」页保存 config.yml / home.yml 后的热重载入口。
+     * 保存动作本身只写文件，运行期对象（registry / home 配置源 / web.home）仍持有旧值，
+     * 必须执行本命令生效；与 {@code actions reload} 分工，互不干扰。
+     */
+    private void handleConfig(CommandSender sender, String label, String[] args) {
+        String sub = args.length < 3 ? "" : args[2].toLowerCase();
+        if (!"reload".equals(sub)) {
+            msgT(sender, "ihomepages.command.homepage.config-usage",
+                    "§c用法: /{0} homepage config reload", label);
+            return;
+        }
+        if (configReloader == null) {
+            msgT(sender, "ihomepages.command.homepage.uninit", "§c配置重载器尚未初始化。");
+            return;
+        }
+        HomepagesConfigReloader.Report r = configReloader.reload();
+        msgT(sender, "ihomepages.command.homepage.config-reloaded",
+                "§a配置已热重载：主页 {0} 个（current={1}），home.yml={2}，web.home={3}，enabled={4}，cache={5}s",
+                r.pageCount, r.current, r.homeYamlReloaded ? "已刷新" : "失败",
+                r.homeApplied ? "已应用" : "未应用", r.enabled, r.cacheSeconds);
+        for (String note : r.notes) {
+            msgT(sender, "ihomepages.command.homepage.config-note", "  §e- {0}", note);
         }
     }
 
@@ -239,10 +275,10 @@ public class HomepageSubCommand extends SubCommand {
     @Override
     public List<String> tabComplete(CommandSender sender, String[] args) {
         if (args.length == 2) {
-            // 二级补全：list / set / info / reload / actions
+            // 二级补全：list / set / info / reload / config / actions
             List<String> out = new ArrayList<>();
             String prefix = args[1].toLowerCase();
-            for (String opt : new String[]{"list", "set", "info", "reload", "actions"}) {
+            for (String opt : new String[]{"list", "set", "info", "reload", "config", "actions"}) {
                 if (opt.startsWith(prefix)) out.add(opt);
             }
             return out;
@@ -253,6 +289,15 @@ public class HomepageSubCommand extends SubCommand {
             List<String> out = new ArrayList<>();
             for (String name : homeApi.list()) {
                 if (name.toLowerCase().startsWith(prefix)) out.add(name);
+            }
+            return out;
+        }
+        if (args.length == 3 && "config".equalsIgnoreCase(args[1])) {
+            // 三级补全：config 子命令（当前仅 reload）
+            List<String> out = new ArrayList<>();
+            String prefix = args[2].toLowerCase();
+            for (String opt : new String[]{"reload"}) {
+                if (opt.startsWith(prefix)) out.add(opt);
             }
             return out;
         }

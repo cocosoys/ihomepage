@@ -5,3 +5,20 @@ author: SOYS
 description: 自定义主页插件：记录不同位置的页面并写入 SOYSHTTPOverMC 的 pages.yml web.home，由框架伺服。软依赖宿主插件的 API 门面注册子指令/接口/reload 钩子。
 depend: [SOYSHTTPOverMC]
 softdepend: [MCERP]
+
+# ERP「插件配置」菜单权限（与 ErpConfigController 的 @ApiPermission 一一对应，
+# 同时被 MCERP ControllerPermScanner 投影为菜单下的 F 按钮）。
+# default: op —— OP 默认放行，与 ERP 管理面的既有鉴权习惯一致。
+permissions:
+  ihomepages.erp:
+    description: 允许访问 iHomePages 的 ERP 管理模块（侧边栏一级节点）
+    default: op
+  ihomepages.erp.config.list:
+    description: 允许查看 iHomePages 可编辑配置文件清单
+    default: op
+  ihomepages.erp.config.query:
+    description: 允许读取 iHomePages 的 config.yml / home.yml 内容
+    default: op
+  ihomepages.erp.config.edit:
+    description: 允许保存 iHomePages 的 config.yml / home.yml
+    default: op

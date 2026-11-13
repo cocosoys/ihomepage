@@ -15,14 +15,21 @@ import com.github.cocosoys.mc.ihomepages.action.exec.CommandClassifier;
 import com.github.cocosoys.mc.ihomepages.action.exec.CommandRunner;
 import com.github.cocosoys.mc.ihomepages.action.queue.ActionClaimStore;
 import com.github.cocosoys.mc.ihomepages.action.queue.OfflineTaskQueue;
+import com.github.cocosoys.mc.ihomepages.config.HomepagesConfigReloader;
 import com.github.cocosoys.mc.ihomepages.config.IHomeConfigExporter;
 import com.github.cocosoys.mc.ihomepages.config.JsonHomeConfigExporter;
 import com.github.cocosoys.mc.ihomepages.spring.impl.MainConfigReader;
 import com.github.cocosoys.mc.ihomepages.config.YamlHomeConfigSource;
+import com.github.cocosoys.mc.ihomepages.spring.controller.ErpConfigController;
+import com.github.cocosoys.mc.ihomepages.spring.impl.HomepagesConfigServiceImpl;
+import com.github.cocosoys.mc.ihomepages.spring.service.IHomepagesConfigService;
 import com.github.cocosoys.mc.ihomepages.homepage.HomepageRegistry;
 import com.github.cocosoys.mc.ihomepages.homepage.HomepageState;
 import com.github.cocosoys.mc.ihomepages.command.HomepageSubCommand;
+import com.github.cocosoys.mc.ihomepages.spring.controller.ErpHomepageController;
 import com.github.cocosoys.mc.ihomepages.spring.controller.HomeApiController;
+import com.github.cocosoys.mc.ihomepages.spring.impl.ErpHomepageServiceImpl;
+import com.github.cocosoys.mc.ihomepages.spring.service.IErpHomepageService;
 import com.github.cocosoys.mc.ihomepages.listener.ActionPendingListener;
 import com.github.cocosoys.mc.ihomepages.expansion.*;
 
@@ -33,8 +40,10 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.jar.JarEntry;
@@ -147,9 +156,18 @@ public final class MyHomePages extends JavaPlugin {
         ActionClaimStore claimStore = new ActionClaimStore();
         WebActionExecutor actionExecutor = new WebActionExecutor(this, actionManager, runner, taskQueue);
 
+        // 3.1.6) 首页展示内容配置源：提前创建，HomeApiController 与 config reload 必须共用同一实例，
+        //        否则热重载刷新的是另一个对象，HTTP 接口读到的仍是旧值。
+        YamlHomeConfigSource home = new YamlHomeConfigSource(this);
+        home.load();
+
+        // 3.1.7) ERP「插件配置」热重载器：原地刷新 cfgReader / registry / web.home / homeSource。
+        HomepagesConfigReloader configReloader = new HomepagesConfigReloader(
+                host, registry, hpState, cfgReader, home);
+
         // 3.2) 注册 /soyshttp homepage 子指令（宿主 initCommand 之后再注入，命令方可生效）
         api.getExtension().registerSubCommand(
-                new HomepageSubCommand(host, apiFacade, actionManager, taskQueue));
+                new HomepageSubCommand(host, apiFacade, actionManager, taskQueue, configReloader));
 
         // 3.3) reload 钩子：宿主 /soyshttp reload 时按 homepage.current 重新应用 web.home（两种自动检测机制之一），
         //      并顺带热重载 actions.yml（服主改配置后随 /soyshttp reload 生效）
@@ -166,8 +184,7 @@ public final class MyHomePages extends JavaPlugin {
         });
 
         // 4) 接口（配置 JSON / 实时数据 / 网页动作）—— 与主页_switch 机制无关，保留
-        YamlHomeConfigSource home = new YamlHomeConfigSource(this);
-        home.load();
+        //    home 已在 3.1.6 创建并加载（与 config reload 共用同一实例）
         IHomeConfigExporter exporter = new JsonHomeConfigExporter();
         HomeApiController controller = new HomeApiController(
                 home, exporter, actionManager, actionExecutor, taskQueue, claimStore, this);
@@ -186,7 +203,16 @@ public final class MyHomePages extends JavaPlugin {
         // ERP Expansion：控制器列表待 ERP 实现就位后传入；MCERP 未安装时
         // McerpExpansion 父类缺失 → NoClassDefFoundError，捕获后跳过（主页不受影响）。
         try {
-            ErpExpansion erpExpansion = new ErpExpansion(Collections.emptyList());
+            // ERP 主页管理 + 插件配置：构建服务与控制器，注入 ErpExpansion
+            // （宿主按 owner 插件名补前缀 → /api/plugins/ihomepages/...，与 identifier 无关）
+            IErpHomepageService erpHomepageSvc = new ErpHomepageServiceImpl(this);
+            ErpHomepageController erpHomepageCtrl = new ErpHomepageController(erpHomepageSvc);
+            IHomepagesConfigService erpConfigSvc = new HomepagesConfigServiceImpl(this);
+            ErpConfigController erpConfigCtrl = new ErpConfigController(erpConfigSvc);
+            List<Object> erpControllers = new ArrayList<>();
+            erpControllers.add(erpHomepageCtrl);
+            erpControllers.add(erpConfigCtrl);
+            ErpExpansion erpExpansion = new ErpExpansion(erpControllers);
             if (!erpExpansion.register()) {
                 log.warnT("ihomepages.mhp.expansion-erp-fail", "ERP Expansion 注册失败");
             }

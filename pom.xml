@@ -34,8 +34,10 @@
                     <target>${java.version}</target>
                 </configuration>
             </plugin>
-            <!-- 资源过滤：仅文本（plugin.yml 占位符替换）；二进制资源（dist 下的 png/jpg/字体等）须排除，
-                 否则 maven-resources-plugin 以文本编码读取会抛 MalformedInputException -->
+            <!-- 资源过滤：仅 plugin.yml 等少量文本需要占位符替换。
+                 dist/（玩家侧手写 HTML）与 erp-dist/（Vue 构建产物：js/css/html/json/map/gz）必须整体排除：
+                 ① 二进制/压缩文件按文本编码读取会抛 MalformedInputException；
+                 ② webpack 产物含 ${...} 模板字面量，被 filtering 当成 Maven 属性替换会直接破坏脚本。 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
@@ -54,6 +56,14 @@
                         <nonFilteredFileExtension>otf</nonFilteredFileExtension>
                         <nonFilteredFileExtension>ico</nonFilteredFileExtension>
                         <nonFilteredFileExtension>svg</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>js</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>css</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>html</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>htm</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>json</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>map</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>gz</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>txt</nonFilteredFileExtension>
                     </nonFilteredFileExtensions>
                 </configuration>
             </plugin>
@@ -132,14 +142,14 @@
             <scope>provided</scope>
         </dependency>
         <!-- MCERP（ERP 生态插件）：ErpExpansion 继承 McerpExpansion 需要其类。provided：
-             运行时由 MCERP 插件提供（softdepend，测试服已装 MCERP-1.0-SNAPSHOT.jar）；
+             运行时由 MCERP 插件提供（softdepend，测试服已装 MCERP-1.4.1.jar）；
              不得 shade 进本 jar —— 否则两个 ClassLoader 各有一份 McerpExpansion，
              跨 ClassLoader 传给 ErpRegistry.registerModule 会类型不兼容。
-             构建本模块前须先 mvn install MCERP 到本地仓库。 -->
+             构建本模块前须先 mvn install MCERP:1.4.1 到本地仓库。 -->
         <dependency>
             <groupId>com.github.cocosoys.mc</groupId>
             <artifactId>MCERP</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.4.1</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

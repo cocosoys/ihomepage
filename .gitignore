@@ -1,2 +1,10 @@
 /.idea/
 /target/
+# 前端中间产物：node_modules 是复用 CustomPanel/web 的目录联接（junction），
+# dist 是 npm 构建产物；真正随插件发布的是 src/main/resources/erp-dist/，勿忽略。
+/web/node_modules/
+/web/dist/
+# 开发/分析过程产物：调试文本、构建日志、agent 工作记忆，勿纳入版本控制
+.workbuddy/
+_*.txt
+*.log

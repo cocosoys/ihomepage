@@ -111,7 +111,6 @@ public class HomeApiController {
     }
 
     @ApiName("网页动作执行")
-    @ApiPublic
     @PostMapping("/action/execute")
     public AjaxResult actionExecute(ApiRequestContext ctx,
                                     @RequestParam(name = "action", required = true) String action,
@@ -124,7 +123,6 @@ public class HomeApiController {
     }
 
     @ApiName("动作状态查询")
-    @ApiPublic
     @GetMapping("/action/status")
     public AjaxResult actionStatus(ApiRequestContext ctx) {
         String player = ctx.getPlayerName();

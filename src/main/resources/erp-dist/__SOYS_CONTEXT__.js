@@ -1,0 +1,18 @@
+// SOYS ContractInjector 自动契约文件（@soys 契约 v4）
+// 伺服时把占位符 __SOYS_CONTEXT__ 替换为服务器环境原语 JSON：
+//   { "scheme":"http|https", "host":"...", "port":8080,
+//     "apiPrefix":"/api", "pluginsPrefix":"/plugins",
+//     "apiFullPrefix":"/api/plugins/SOYSHTTPOverMC-ERP",
+//     "pageFullPrefix":"/web/plugins/SOYSHTTPOverMC-ERP",
+//     "webResourcePrefix":"web/plugins/SOYSHTTPOverMC-ERP/page/" }
+// （旧字段 fullPrefix / pagePrefix 已由 apiFullPrefix / pageFullPrefix 取代）
+// 换服务器 / 改 api-prefix 后无需改动任何前端代码，重新请求即自动适配。
+window.SOYS_CONTEXT = typeof __SOYS_CONTEXT__ !== 'undefined' ? __SOYS_CONTEXT__ : null;
+
+// HTML 资源引用改写排除列表（前缀匹配）：
+// /api 为 SOYS API 保留前缀（默认已排除）；/prod-api 为应用 API 前缀，必须显式声明。
+// /common 与 /soys-auth.js 是 SOYSHTTPOverMC 主插件挂在站点根路径的公共资源
+// （vue/vuex/vue-router/element-ui externals + SoysAuth 登录组件）。
+// 若不排除，ContractInjector.maybeRewriteHtml 会按 owner 把它们改写成
+// /web/plugins/ihomepages/common/...、/web/plugins/ihomepages/soys-auth.js → 404 → 白屏。
+window.SOYS_CONTEXT_EXCLUDES = ["/prod-api", "/api", "/common", "/soys-auth.js"];
