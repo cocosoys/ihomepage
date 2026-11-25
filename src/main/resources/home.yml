@@ -2,6 +2,20 @@ page:
   title: "我的世界服务器主页"
   icon: ""
   background: ""
+
+# 区块世界落地页专用（pages/landing/）。经 /homepage/config 自动透传给 Vue，零 Java 改动。
+branding:
+  # 服务器名：落地页用原版像素字渲染此文本（缺字回退系统字）
+  server-name: "生电公益服"
+  # 标语：显示在标题下方
+  slogan: "从零开始 · 建造一切 · 永不删档"
+
+# 区块墙逐根生长动画参数（毫秒）
+chunks:
+  reveal-ms: 420
+  stagger-ms: 60
+  show-coordinates: true
+
 server:
   ip: "play.example.com:25565"
   download: ""

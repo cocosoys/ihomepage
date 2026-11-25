@@ -8,3 +8,9 @@
 .workbuddy/
 _*.txt
 *.log
+pages/*
+*.py
+*.sh
+design-concepts/*
+src/main/resources/pages-dist/*
+temp/*

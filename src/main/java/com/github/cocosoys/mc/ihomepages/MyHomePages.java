@@ -128,10 +128,15 @@ public final class MyHomePages extends JavaPlugin {
         HomeApi apiFacade = new HomeApiImpl(host, registry, hpState);
         homeApi = apiFacade;
 
-        // 3.0) 释放 dist / language 目录到本插件数据目录（供管理/自定义）
+        // 3.0) 释放 dist / language / pages-dist 目录到本插件数据目录（供管理/自定义）
         // 注意：getDataFolder() 本身即插件数据目录（plugins/ihomepages），切勿再拼 "ihomepages"，否则会多套一层。
         extractResourceDir(this, "dist", new File(getDataFolder(), "dist"));
         extractResourceDir(this, "language", new File(getDataFolder(), "language"));
+        // pages-dist/ = pages/ 下各 Vue3 主页工程的构建产物（如 landing/），随 jar 发布。
+        // 只补齐缺失文件、不覆盖已存在副本，运营可直接改磁盘上的落地页做热替换。
+        // config.yml 的 homepage.pages.<name> 用相对路径 "pages-dist/<name>/index.html"，
+        // 经 resolveWebHomeSpec 解析为数据目录绝对路径后由宿主 setHomeSpec 伺服。
+        extractResourceDir(this, "pages-dist", new File(getDataFolder(), "pages-dist"));
 
         // 3.0.1) 把本插件语言包注册为宿主 I18n 的额外语言源（合并进默认作用域：
         //        log.infoT / msgT / I18n.t 的 key 统一以 ihomepages. 为前缀，避免与宿主及其他插件键空间冲突）

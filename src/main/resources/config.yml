@@ -16,5 +16,20 @@ homepage:
   # 缺少 "default" 键时自动补 default -> dist/index.html。
   pages:
     default: "dist/index.html"
+    # 区块世界落地页：pages/landing/ Vue3 工程构建产物，随 jar 发布到磁盘 pages-dist/landing/。
+    # 用 /soyshttp homepage set landing 切换；source 工程见项目根 pages/landing/。
+    landing: "pages-dist/landing/index.html"
+    # ---- 六类玩法主页（pages/ 下各独立 Vue3 工程构建产物，随 jar 发布）----
+    # 管理员用 /soyshttp homepage set <name> 切换，或在 ERP 配置菜单「首页内容」选择。
+    tower: "pages-dist/tower/index.html"          # 魔塔：塔剖面逐层点亮 + 逐字砸入（像素硬边）
+    pixel: "pages-dist/pixel/index.html"          # 神奇宝贝：精灵球爆闪弹出（街机）
+    tech: "pages-dist/tech/index.html"            # 科技：BIOS 终端启动序列（AE2/Mek/Create/IC2）
+    magic: "pages-dist/magic/index.html"          # 魔法：粒子汇聚成字→消散（Thaum/Botania/Astral）
+    multiverse: "pages-dist/multiverse/index.html" # 多世界：五传送门轮播（原版纹理）
+    rpg: "pages-dist/rpg/index.html"              # 属性 RPG：游戏 HUD（本轮原版纹理，龙珠/火影后续）
+    dragonball: "pages-dist/dragonball/index.html" # 龙珠 C：龟派气功单镜头爆发（three.js 体素渲染，pages/dragonball/）
+    naruto: "pages-dist/naruto/index.html"        # 火影 C：开眼→万花筒→须佐能乎（pages/naruto/）
+    blockworld: "pages-dist/blockworld/index.html" # 混合 mod：末地传送门 18 柱→门启动→4 世界轮播（pages/blockworld/）
+    gallery: "pages-dist/gallery/index.html"      # 混合 mod：龙珠 VS 火影 集结→对决→VS 定格（pages/gallery/）
     # alt: "D:/server/home/alt.html"
     # remote: "https://example.com/home.html"
